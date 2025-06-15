@@ -31,7 +31,9 @@ export class MapController {
   public currentMode: MapModes = MapModes.None;
   public graphicsLayer: GraphicsLayer
 
-  public listeners: (() => Promise<void>)[] = [];
+  public clickListeners: (() => Promise<void>)[] = [];
+  public dragListeners: (() => Promise<void>)[] = [];
+  public moveListeners: (() => Promise<void>)[] = [];
   public static readonly instance: MapController = new MapController();
 
   private constructor() {
@@ -98,7 +100,7 @@ export class MapController {
         break;
     }
 
-    Promise.all(this.listeners.map(fn => fn()));
+    Promise.all(this.clickListeners.map(fn => fn()));
   }
 
   public dblclick(event: ViewDoubleClickEvent): void {
@@ -124,7 +126,7 @@ export class MapController {
         break;
     }
 
-    Promise.all(this.listeners.map(fn => fn()));
+    Promise.all(this.clickListeners.map(fn => fn()));
   }
 
   public move(event: ViewPointerMoveEvent): void {
@@ -137,20 +139,26 @@ export class MapController {
     const evx = new MouseEventModel(this.toStatePlane(event), event.button, 'move');
     switch (this.currentMode) {
       case MapModes.DrawLine:
-        LineBuildHandler.move(this, evx);
+        if (LineBuildHandler.move(this, evx)) {
+          Promise.all(this.moveListeners.map(fn => fn()));
+        }
         break;
       case MapModes.DrawRect:
-        RectBuildHandler.move(this, evx);
+        if (RectBuildHandler.move(this, evx)) {
+          Promise.all(this.moveListeners.map(fn => fn()));
+        }
         break;
       case MapModes.DrawPolygon:
-        PolygonBuildHandler.move(this, evx);
+        if (PolygonBuildHandler.move(this, evx)) {
+          Promise.all(this.moveListeners.map(fn => fn()));
+        }
         break;
       case MapModes.TransformRect:
-        RectTransformHandler.move(this, evx);
+        if (RectTransformHandler.move(this, evx)) {
+          Promise.all(this.moveListeners.map(fn => fn()));
+        }
         break;
     }
-
-    Promise.all(this.listeners.map(fn => fn()));
   }
 
   public drag(event: ViewDragEvent): void {
@@ -163,10 +171,9 @@ export class MapController {
     switch (this.currentMode) {
       case MapModes.TransformRect:
         this.hitTest(event, RectTransformHandler.drag);
+        Promise.all(this.dragListeners.map(fn => fn()));
         break;
     }
-
-    Promise.all(this.listeners.map(fn => fn()));
   }
 
   public hitTest(event: ViewClickEvent | ViewDoubleClickEvent | ViewDragEvent | ViewPointerMoveEvent, callback: (ctx: MapController, evx: MouseEventModel, graphics: Graphic) => void): void {

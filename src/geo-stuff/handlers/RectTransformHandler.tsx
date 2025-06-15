@@ -64,7 +64,9 @@ export class RectTransformHandler {
     ctx.compassHandler.updateFromVertices((ctx.currentBuilder!.model as RectModel).vertices);
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): void {
+  public static move(ctx: MapController, evx: MouseEventModel): boolean {
     document.body.style.cursor = 'default';
+
+    return false;
   }
 }

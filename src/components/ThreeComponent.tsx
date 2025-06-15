@@ -36,8 +36,12 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
   const [sizeCounter, setSizeCounter] = useState<number>(0);
 
   const wellboreMeshes = useRef<Mesh[]>([]);
+  const blockMeshes = useRef<Mesh[]>([]);
 
-  ctx.listeners.push(async () => {
+  ctx.moveListeners.push(async () => {
+    setCtxState(ctxState + 1);
+  });
+  ctx.dragListeners.push(async () => {
     setCtxState(ctxState + 1);
   });
 
@@ -50,13 +54,7 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
     if (bounds.length > 0 && bounds.getItemAt(0)) {
       setBoundaryRing((bounds.getItemAt(0)!.geometry as Polygon).rings[0]);
     }
-
-    MeshUtils.loadHeightMap(-20, 0x88cc88, mesh => {
-      scene.current!.add(mesh);
-    });
-    MeshUtils.loadHeightMap(-60, 0x8888cc, mesh => {
-      scene.current!.add(mesh);
-    });
+    console.log('ctxState');
   }, [ctxState]);
 
   // boundaryRing
@@ -68,14 +66,40 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
       boundaryRing.map(a => a[0]).reduce((sum: number, val: number) => sum + val, 0) / boundaryRing.length,
       boundaryRing.map(a => a[1]).reduce((sum: number, val: number) => sum + val, 0) / boundaryRing.length
     ]);
+
+    MeshUtils.loadHeightMap(-20, 0x88cc88, mesh => {
+      scene.current!.add(mesh);
+    });
+    MeshUtils.loadHeightMap(-60, 0x8888cc, mesh => {
+      scene.current!.add(mesh);
+    });
+    console.log('boundaryRing');
   }, [boundaryRing]);
 
   // blocks
   useEffect(() => {
+    blockMeshes.current.forEach((mesh) => {
+      scene.current!.remove(mesh);
+      mesh.geometry.dispose();
+
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(m => m.dispose());
+      } else {
+        mesh.material.dispose();
+      }
+    });
+    blockMeshes.current.length = 0;
+
     blockGraphics.forEach((rect, idx) => {
       const ring = (rect.geometry as Polygon).rings[0];
       const walls = MeshUtils.createPolygonWalls(ring, outerRingCenter, scalingFactor);
-      walls.forEach(w => scene.current!.add(w));
+
+      walls.forEach(w => {
+          w.name = rect.attributes.modelAttributes.model.id;
+          scene.current!.add(w)
+
+          blockMeshes.current.push(w);
+      });
     });
   }, [blockGraphics]);
 
@@ -115,6 +139,7 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
     renderer.current.setSize(width, height);
     camera.current.aspect = width / height;
     camera.current.updateProjectionMatrix();
+    console.log('sizeCounter');
   }, [sizeCounter]);
 
   useEffect(() => {

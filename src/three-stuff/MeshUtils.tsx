@@ -52,7 +52,7 @@ export class MeshUtils {
 
   public static loadHeightMap(ht: number, color: number, callback: (mesh: Mesh<PlaneGeometry,MeshBasicMaterial>) => void): void {
     const loader = new THREE.TextureLoader();
-    loader.load('/heightmap.png', (texture) => {
+    loader.load(import.meta.env.BASE_URL + 'heightmap.png', (texture) => {
       const img = texture.image as HTMLImageElement;
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -73,7 +73,7 @@ export class MeshUtils {
       vertices.needsUpdate = true;
       geometry.computeVertexNormals();
 
-      const material = new THREE.MeshBasicMaterial({ color: color, wireframe: true, transparent: true, opacity: .1 });
+      const material = new THREE.MeshBasicMaterial({ color: color, wireframe: true, transparent: true, opacity: .05 });
 
       callback(new THREE.Mesh(geometry, material));
     });

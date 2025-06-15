@@ -36,7 +36,7 @@ export class RectBuildHandler {
     }
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): void {
+  public static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
 
@@ -48,5 +48,7 @@ export class RectBuildHandler {
         ctx.compassHandler.updateFromVertices((builder as RectBuilder).model.vertices);
       }
     }
+
+    return ctx.currentMode !== undefined;
   }
 }

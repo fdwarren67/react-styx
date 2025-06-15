@@ -40,7 +40,7 @@ export class PolygonBuildHandler {
     }
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): void {
+  public static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
 
@@ -52,5 +52,7 @@ export class PolygonBuildHandler {
         ctx.compassHandler.updateFromVertices((builder as PolygonBuilder).model.vertices);
       }
     }
+
+    return ctx.currentBuilder !== undefined;
   }
 }

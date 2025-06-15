@@ -12,7 +12,7 @@ function App() {
     document.title = "Styx"
   }, []);
 
-  const view = new MapController();
+  const view = MapController.instance;
 
   return (
     <>

@@ -18,12 +18,14 @@ export class LineBuildHandler {
     }
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): void {
+  public static move(ctx: MapController, evx: MouseEventModel): boolean {
     const builder = ctx.currentBuilder as LineBuilder;
     if (builder) {
       builder.move(evx);
 
       ctx.compassHandler.updateFromVertices([builder.model.anchorPoint, builder.model.endPoint]);
     }
+
+    return builder !== undefined;
   }
 }

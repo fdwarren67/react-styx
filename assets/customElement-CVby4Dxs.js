@@ -1,0 +1,3 @@
+import{e as a,f as i,x as l,j as n,S as o}from"./index-5Uv45sI4.js";/*! All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+See https://github.com/Esri/calcite-design-system/blob/dev/LICENSE.md for details.
+v3.1.0 */const d=n`:host{display:block}:host([hidden]){display:none}[hidden]{display:none}`,e=class e extends a{constructor(){super(...arguments),this.disabled=!1,this.calciteInternalOptionGroupChange=i({cancelable:!1})}willUpdate(t){(t.has("disabled")&&(this.hasUpdated||this.disabled!==!1)||t.has("label"))&&this.calciteInternalOptionGroupChange.emit()}render(){return l`<div>${this.label}</div><slot></slot>`}};e.properties={disabled:7,label:1},e.styles=d;let s=e;o("calcite-option-group",s);export{s as OptionGroup};

@@ -1,0 +1,3 @@
+import{O as e}from"./date-vPLQ79tU.js";import{O as i}from"./locale-s9NCZ3Zl.js";import{bb as c}from"./index-5Uv45sI4.js";/*! All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+See https://github.com/Esri/calcite-design-system/blob/dev/LICENSE.md for details.
+v3.1.0 */const r={},s={};async function f(t){const n=i(t);if(r[n])return r[n];s[n]||(s[n]=fetch(c(`./assets/date-picker/nls/${n}.json`)).then(a=>a.json()).catch(()=>(console.error(`Translations for "${n}" not found or invalid, falling back to english`),f("en"))));const o=await s[n];return r[n]=o,o}function u(t){return t.map((n,o)=>e(n,o===1))}export{f as l,u as m};

@@ -1,0 +1,21 @@
+import{e as Z,i as b,o as c,x as C,t as p,j as A,S as B}from"./index-5Uv45sI4.js";import{i as O}from"./guid-BDWAkmkV.js";import{b as S}from"./observers-CKvzzITU.js";/*! All material copyright ESRI, All Rights Reserved, unless otherwise specified.
+See https://github.com/Esri/calcite-design-system/blob/dev/LICENSE.md for details.
+v3.1.0 */function E(e,t,h){const a=t[0]-e[0],r=h[0]-t[0],o=t[1]-e[1],l=h[1]-t[1],n=o/(a||r<0&&0),s=l/(r||a<0&&0),i=(n*r+s*a)/(a+r);return(Math.sign(n)+Math.sign(s))*Math.min(Math.abs(n),Math.abs(s),.5*Math.abs(i))||0}function P(e,t,h){const a=t[0]-e[0],r=t[1]-e[1];return a?(3*r/a-h)/2:h}function j(e,t,h,a,r){const[o,l]=e,[n,s]=t,i=(n-o)/3,$=r([o+i,l+i*h]).join(","),d=r([n-i,s-i*a]).join(","),g=r([n,s]).join(",");return`C ${$} ${d} ${g}`}function R({width:e,height:t,min:h,max:a}){const r=a[0]-h[0],o=a[1]-h[1];return l=>{const n=(l[0]-h[0])/r*e,s=t-(l[1]-h[1])/o*t;return[n,s]}}function q(e){const[t,h]=e[0],a=[t,h],r=[t,h];return e.reduce(({min:o,max:l},[n,s])=>({min:[Math.min(o[0],n),Math.min(o[1],s)],max:[Math.max(l[0],n),Math.max(l[1],s)]}),{min:a,max:r})}function U({data:e,min:t,max:h,t:a}){if(e.length===0)return"";const[r,o]=a(e[0]),[l,n]=a(t),[s]=a(h);let i,$,d;const g=e.reduce((x,v,m)=>{if($=e[m-2],d=e[m-1],m>1){const u=E($,d,v),M=i===void 0?P($,d,u):i,w=j($,d,M,u,a);return i=u,`${x} ${w}`}return x},`M ${l},${n} L ${l},${o} L ${r},${o}`),y=e[e.length-1],f=j(d,y,i,P(d,y,i),a);return`${g} ${f} L ${s},${n} Z`}const W=A`:host{display:block;block-size:100%}.svg{fill:currentColor;stroke:transparent;margin:0;display:block;block-size:100%;inline-size:100%;padding:0}.svg .graph-path--highlight{fill:var(--calcite-graph-highlight-fill-color, var(--calcite-color-brand));opacity:.5}:host([hidden]){display:none}[hidden]{display:none}`,k={svg:"svg",graphPath:"graph-path",graphPathHighlight:"graph-path--highlight"},L=class L extends Z{constructor(){super(...arguments),this.graphId=`calcite-graph-${O()}`,this.resizeObserver=S("resize",()=>this.requestUpdate()),this.data=[]}connectedCallback(){var t;super.connectedCallback(),(t=this.resizeObserver)==null||t.observe(this.el)}disconnectedCallback(){var t;super.disconnectedCallback(),(t=this.resizeObserver)==null||t.disconnect()}render(){const{data:t,colorStops:h,el:a,highlightMax:r,highlightMin:o,min:l,max:n}=this,s=this.graphId,{clientHeight:i,clientWidth:$}=a;if(!t||t.length===0)return C`<svg aria-hidden=true class=${b(k.svg)} height=${i??c} preserveAspectRatio=none viewBox=${`0 0 ${$} ${i}`} width=${$??c}></svg>`;const{min:d,max:g}=q(t);let y=d,f=g;(l<d[0]||l>d[0])&&(y=[l,0]),(n>g[0]||n<g[0])&&(f=[n,g[1]]);const x=R({min:y,max:f,width:$,height:i}),[v]=x([o,f[1]]),[m]=x([r,f[1]]),u=U({data:t,min:d,max:g,t:x}),M=h?`url(#linear-gradient-${s})`:void 0;return C`<svg aria-hidden=true class=${b(k.svg)} height=${i??c} preserveAspectRatio=none viewBox=${`0 0 ${$} ${i}`} width=${$??c}>${h?p`<defs><linearGradient .id=${`linear-gradient-${s}`} x1=0 x2=1 y1=0 y2=0>${h.map(({offset:w,color:G,opacity:H})=>p`<stop offset=${`${w*100}%`} stop-color=${G??c} stop-opacity=${H??c} />`)}</linearGradient></defs>`:null}${o!==void 0?[p`<mask height=100% .id=${`${s}1`} width=100% x=0% y=0%><path d=${`
+            M 0,0
+            L ${v-1},0
+            L ${v-1},${i}
+            L 0,${i}
+            Z
+          `} fill=white /></mask>`,p`<mask height=100% .id=${`${s}2`} width=100% x=0% y=0%><path d=${`
+            M ${v+1},0
+            L ${m-1},0
+            L ${m-1},${i}
+            L ${v+1}, ${i}
+            Z
+          `} fill=white /></mask>`,p`<mask height=100% .id=${`${s}3`} width=100% x=0% y=0%><path d=${`
+                M ${m+1},0
+                L ${$},0
+                L ${$},${i}
+                L ${m+1}, ${i}
+                Z
+              `} fill=white /></mask>`,p`<path class=${b(k.graphPath)} d=${u??c} fill=${M??c} mask=${`url(#${s}1)`} />`,p`<path class=${b(k.graphPathHighlight)} d=${u??c} fill=${M??c} mask=${`url(#${s}2)`} />`,p`<path class=${b(k.graphPath)} d=${u??c} fill=${M??c} mask=${`url(#${s}3)`} />`]:p`<path class=${b(k.graphPath)} d=${u??c} fill=${M??c} />`}</svg>`}};L.properties={colorStops:0,data:0,highlightMax:9,highlightMin:9,max:11,min:11},L.styles=W;let z=L;B("calcite-graph",z);export{z as Graph};

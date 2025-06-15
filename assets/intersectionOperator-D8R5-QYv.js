@@ -1,0 +1,1 @@
+import{g9 as s,h5 as o,ga as c,h6 as i,G as u}from"./index-5Uv45sI4.js";import{o as f,u as m}from"./operatorIntersection-DGChqSwa.js";function x(a,r){const t=s(a),e=t.getSpatialReference();return o(f(t.getGeometry(),c(r),e),e)}function G(a,r){const[t,e]=i(a);return m(t,c(r),e,7).map(n=>o(n,e)).filter(u)}export{x as execute,G as executeMany};

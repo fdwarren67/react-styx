@@ -1,0 +1,203 @@
+import {forwardRef, use, useEffect, useImperativeHandle, useRef} from "react";
+import MapView from "@arcgis/core/views/MapView";
+import Map from "@arcgis/core/Map";
+import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator.js";
+import {SpatialReference} from "@arcgis/core/geometry";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import {defineCustomElements,} from "@esri/calcite-components/dist/loader";
+import "@esri/calcite-components/dist/calcite/calcite.css";
+import {MapContext} from "../common-stuff/MapContext.tsx";
+import {GeoTest} from "../geo-stuff/controllers/GeoTest.tsx";
+import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import './MapComponent.css'
+import ViewClickEvent = __esri.ViewClickEvent;
+import ViewPointerMoveEvent = __esri.ViewPointerMoveEvent;
+import ViewDoubleClickEvent = __esri.ViewDoubleClickEvent;
+import ViewDragEvent = __esri.ViewDragEvent;
+
+defineCustomElements(window);
+
+export interface MapHandle {
+  setCurrentMode: (mode: MapModes) => void;
+}
+
+const MapComponent = forwardRef<MapHandle>((props, ref) => {
+  useImperativeHandle(ref, () => ({
+    setCurrentMode: (mode: MapModes) => ctx.setMode(mode)
+  }));
+
+  const mapRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<__esri.MapView | null>(null);
+  const ctx = use(MapContext);
+  // const [statePlaneLocation, setStatePlaneLocation] = useState<string>('');
+  // const [wgs84Location, setWgs84Location] = useState<string>('');
+
+  const calcPointerLocation = (event: ViewPointerMoveEvent): void => {
+    // if (!ctx.view) {
+    //   setStatePlaneLocation('');
+    //   setWgs84Location('');
+    //   return;
+    // }
+    //
+    // const pointStatePlane = projectOperator.execute(ctx.view.toMap(event), ctx.statePlane!) as Point;
+    // setStatePlaneLocation(`X/Y: ${Math.round(pointStatePlane.x)} / ${Math.round(pointStatePlane.y)}`);
+    //
+    // const pointWgs84 = projectOperator.execute(ctx.view.toMap(event), SpatialReference.WGS84) as Point;
+    // setWgs84Location(`WGS84: ${Math.round(pointWgs84.x * 1000000) / 1000000}, ${Math.round(pointWgs84.y * 1000000) / 1000000}`);
+  }
+
+  const initializeMap = () => {
+    ctx.statePlane = new SpatialReference({wkid: 32039});
+    ctx.statePlaneName = 'NAD27 - Texas Central';
+
+    const map = new Map({
+      basemap: "gray-vector"
+    });
+
+    ctx.view = new MapView({
+      container: mapRef.current,
+      map: map,
+      center:  [-102.55, 31.02],
+      zoom: 12
+    });
+    ctx.view.ui.remove("zoom");
+    ctx.view.ui.remove("attribution");
+
+    viewRef.current = ctx.view;
+
+    const layer = new FeatureLayer({
+      url: 'https://services.arcgis.com/jDGuO8tYggdCCnUJ/arcgis/rest/services/Leases/FeatureServer/0',
+      renderer: new SimpleRenderer({
+        symbol: new SimpleFillSymbol({
+          color: [255, 255, 0, 0.2],
+          outline: {
+            color: [0, 0, 0, .2],
+            width: 1
+          }
+        })
+      })
+    });
+
+    map.add(layer);
+    map.add(ctx.graphicsLayer);
+
+    ctx.view.on('click', (event: ViewClickEvent) => {
+      ctx.click(event);
+    });
+
+    ctx.view.on('double-click', (event: ViewDoubleClickEvent) => {
+      ctx.dblclick(event);
+    });
+
+    ctx.view.on('pointer-move', (event: ViewPointerMoveEvent) => {
+      calcPointerLocation(event);
+      ctx.move(event);
+    });
+
+    ctx.view.on('drag', (event: ViewDragEvent) => {
+      ctx.drag(event);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        ctx.escape();
+      }
+    });
+
+    GeoTest.test(ctx)
+  };
+
+  useEffect(() => {
+    if (ctx.view) {
+      ctx.view.container = mapRef.current as HTMLDivElement;
+    }
+    else {
+      projectOperator.load().then(() => {
+        initializeMap();
+      }).catch((error) => {
+        console.error('Error loading projection:', error);
+      });
+    }
+
+    return () => {
+      if (viewRef.current) {
+        viewRef.current.container = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{height: "100%", width: "100%"}}>
+      <div className="mapDiv" ref={mapRef} style={{display: 'flex', flex: 1, height: '100%', width: "100%"}}></div>
+
+      {/*<div id='side-bar' style={{*/}
+      {/*  position: 'absolute',*/}
+      {/*  top: '0px',*/}
+      {/*  height: '100%',*/}
+      {/*  width: '50px',*/}
+      {/*  padding: '3px',*/}
+      {/*  backgroundColor: 'white',*/}
+      {/*  borderRight: '1px solid #ccc'*/}
+      {/*}}>*/}
+      {/*  <button className="btn btn-outline-secondary" type="button" onClick={() => setSidebarOpen(!sidebarOpen)}>*/}
+      {/*    <i className={"bi " + (sidebarOpen ? "bi-chevron-double-left" : "bi-chevron-double-right")}></i>*/}
+      {/*  </button>*/}
+      {/*</div>*/}
+      {/*<div style={{*/}
+      {/*  position: 'absolute',*/}
+      {/*  top: '0px',*/}
+      {/*  left: '50px',*/}
+      {/*  height: '100%',*/}
+      {/*  width: sidebarOpen ? '250px' : '0',*/}
+      {/*  overflow: 'hidden',*/}
+      {/*  transition: 'width 0.3s ease',*/}
+      {/*  backgroundColor: 'white',*/}
+      {/*  borderRight: '1px solid #ccc'*/}
+      {/*}}>*/}
+      {/*  <ul className="nav flex-column">*/}
+      {/*    <li className="nav-item">*/}
+      {/*      <a className="nav-link" href="#">Item 1</a>*/}
+      {/*    </li>*/}
+      {/*    <li className="nav-item">*/}
+      {/*      <a className="nav-link" href="#">Item 2</a>*/}
+      {/*    </li>*/}
+      {/*  </ul>*/}
+      {/*</div>*/}
+
+      {/*<div id='info-bar' style={{*/}
+      {/*  position: 'absolute',*/}
+      {/*  width: '100%',*/}
+      {/*  height: '40px',*/}
+      {/*  bottom: '0px',*/}
+      {/*  backgroundColor: 'white',*/}
+      {/*  borderTop: '1px solid #ccc'*/}
+      {/*}}></div>*/}
+      {/*<div style={{position: "absolute", bottom: "7px", left: "345px", width: '250px'}}>{wgs84Location}</div>*/}
+      {/*<div style={{position: "absolute", bottom: "7px", left: "600px", width: '350px'}}>{statePlaneLocation}</div>*/}
+
+      {/*  <CalciteShellPanel slot="panel-start" width={'s'} displayMode={'dock'} resizable={true}>*/}
+      {/*    <CalcitePanel heading="Tools" id="menu-panel">*/}
+      {/*      <CalciteMenu layout="vertical" label="Tools">*/}
+      {/*        <CalciteMenuItem icon-start="add-in-new" text="New">*/}
+      {/*          <CalciteMenuItem icon-start="line-straight" slot="submenu-item" text="Wellbore"*/}
+      {/*                           onClick={() => setCurrentMode(MapModes.DrawLine)}></CalciteMenuItem>*/}
+      {/*          <CalciteMenuItem icon-start="polygon" slot="submenu-item" text="Block"*/}
+      {/*                           onClick={() => setCurrentMode(MapModes.DrawPolygon)}></CalciteMenuItem>*/}
+      {/*          <CalciteMenuItem icon-start="rectangle-plus" slot="submenu-item" text="Rectangular"*/}
+      {/*                           onClick={() => setCurrentMode(MapModes.DrawRect)}></CalciteMenuItem>*/}
+      {/*        </CalciteMenuItem>*/}
+      {/*        <CalciteMenuItem icon-start="pencil" text="Edit">*/}
+      {/*          <CalciteMenuItem icon-start="rotate" slot="submenu-item" text="Transform Block"*/}
+      {/*                           onClick={() => setCurrentMode(MapModes.TransformRect)}></CalciteMenuItem>*/}
+      {/*        </CalciteMenuItem>*/}
+      {/*        <CalciteMenuItem icon-start="cube" text="Explore 3-D" onClick={() => navigate('/three')}></CalciteMenuItem>*/}
+      {/*      </CalciteMenu>*/}
+      {/*    </CalcitePanel>*/}
+      {/*  </CalciteShellPanel>*/}
+    </div>
+  );
+});
+
+export default MapComponent;

@@ -105,7 +105,6 @@ export class RectTransformer implements Builder {
       });
     });
 
-
     this.model.vertices.forEach((pt, idx) => {
       this.edgeGraphics[idx].geometry = this.createEdgeGeometry(pt, this.model.vertices[(idx + 1) % 4]);
     });

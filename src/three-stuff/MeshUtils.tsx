@@ -24,7 +24,7 @@ export class MeshUtils {
         side: THREE.DoubleSide,
         wireframe: true,
         transparent: true,
-        opacity: .1
+        opacity: .05
       });
 
       return new THREE.Mesh(geometry, material);

@@ -74,6 +74,23 @@ export class GeometryUtils {
     });
   }
 
+  public static centerPoint(points: Point[]): Point {
+      const total = points.reduce(
+        (acc, pt) => {
+          acc.x += pt.x;
+          acc.y += pt.y;
+          return acc;
+        },
+        { x: 0, y: 0 }
+      );
+
+      return new Point({
+        x: total.x / points.length,
+        y: total.y / points.length,
+        spatialReference: points[0].spatialReference
+      });
+  }
+
   public static offsetPoint(orig: Point, offsetX: number, offsetY: number): Point {
     return new Point({
       x: orig.x + offsetX,

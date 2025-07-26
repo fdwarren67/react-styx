@@ -7,7 +7,9 @@ export enum ModelRoles {
   Vertex,
   Edge,
   Boundary,
-  Compass
+  CompassCircle,
+  CompassAzimuth,
+  CompassNormal
 }
 
 export class ModelTypes {

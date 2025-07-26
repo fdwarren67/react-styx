@@ -4,14 +4,17 @@ import PanelContainer, {PanelHandle} from "./PanelContainer.tsx";
 import MapComponent, {MapHandle} from "../components/MapComponent.tsx";
 import {useEffect, useRef} from "react";
 import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import InfoComponent, {InfoHandle} from "../components/InfoComponent.tsx";
 
 const MainContainer = () => {
   const mapRef = useRef<MapHandle>(null);
   const threeRef = useRef<ThreeHandle>(null);
+  const infoRef = useRef<InfoHandle>(null);
 
   const mapPanelRef = useRef<PanelHandle>(null);
   const threePanelRef = useRef<PanelHandle>(null);
-  const panelOrder = useRef<string[]>(['map', 'three']);
+  const infoPanelRef = useRef<PanelHandle>(null);
+  const panelOrder = useRef<string[]>(['map', 'three', 'info']);
 
   const setBackPanelCode = (backPanelCode: string, origin: string) => {
     if (origin !== "map") {
@@ -19,6 +22,9 @@ const MainContainer = () => {
     }
     if (origin != "three") {
       threePanelRef.current?.setBackPanelCode(backPanelCode);
+    }
+    if (origin != "info") {
+      infoPanelRef.current?.setBackPanelCode(backPanelCode);
     }
     threeRef.current!.resize();
   };
@@ -29,6 +35,7 @@ const MainContainer = () => {
 
     mapPanelRef.current?.setZOrder(panelOrder.current);
     threePanelRef.current?.setZOrder(panelOrder.current);
+    infoPanelRef.current?.setZOrder(panelOrder.current);
   }
 
   const setMapMode = (mode: MapModes) => {
@@ -56,17 +63,20 @@ const MainContainer = () => {
                 <ul className="dropdown-menu">
                   <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("map", "main")}>Expand Map</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("three", "main")}>Expand 3-D</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("info", "main")}>Expand Info</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("none", "main")}>Float All</a></li>
                   <li>
                     <hr className="dropdown-divider"/>
                   </li>
                   <li><a className="dropdown-item" href="#" onClick={() => bringToFront("map")}>Bring Map to Front</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => bringToFront("three")}>Bring 3-D to Front</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => bringToFront("info")}>Bring Info to Front</a></li>
                   <li>
                     <hr className="dropdown-divider"/>
                   </li>
                   <li><a className="dropdown-item" href="#" onClick={() => mapPanelRef.current!.hide()}>Hide Map</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => threePanelRef.current!.hide()}>Hide 3-D</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => infoPanelRef.current!.hide()}>Hide Info</a></li>
                 </ul>
               </li>
 
@@ -84,7 +94,7 @@ const MainContainer = () => {
       </nav>
 
       <PanelContainer ref={mapPanelRef} panelCode="map" title={"Map View"}
-                      defaults={{position: {x: 0, y: 50}, size: {width: "50vw", height: "50vh"}}}
+                      defaults={{position: {x: 10, y: 50}, size: {width: "33vw", height: "33vh"}}}
                       onSetToBackPanel={() => {
                         setBackPanelCode('map', 'map')
                       }}
@@ -94,8 +104,9 @@ const MainContainer = () => {
                       onResize={(size) => {
                       }}
       ><MapComponent ref={mapRef}></MapComponent></PanelContainer>
+
       <PanelContainer ref={threePanelRef} panelCode="three" title={"3-D View"}
-                      defaults={{position: {x: 20, y: (parent.innerHeight / 2) - 20}, size: {width: "50vw", height: (parent.innerHeight / 2) + 'px'}}}
+                      defaults={{position: {x: 10, y: (parent.innerHeight * .67) - 10}, size: {width: "33vw", height: (parent.innerHeight / 3) + 'px'}}}
                       onSetToBackPanel={() => {
                         setBackPanelCode('three', 'three')
                       }}
@@ -106,6 +117,18 @@ const MainContainer = () => {
                         threeRef.current!.resize()
                       }}
       ><ThreeComponent ref={threeRef}></ThreeComponent></PanelContainer>
+
+      <PanelContainer ref={infoPanelRef} panelCode="info" title={"Info"}
+                      defaults={{position: {x: (parent.innerWidth * .67) - 10, y: (parent.innerHeight * .67) - 10}, size: {width: "33vw", height: "33vh"}}}
+                      onSetToBackPanel={() => {
+                        setBackPanelCode('info', 'info')
+                      }}
+                      onBringToFront={() => {
+                        bringToFront('info')
+                      }}
+                      onResize={(size) => {
+                      }}
+      ><InfoComponent ref={infoRef}></InfoComponent></PanelContainer>
     </div>
   );
 };

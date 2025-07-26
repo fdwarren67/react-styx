@@ -68,13 +68,14 @@ export class MapController {
   public click(event: ViewClickEvent): void {
     if (this.currentMode === MapModes.None) {
       this.hitTest(event, (ctx: MapController, evx: MouseEventModel, graphic: Graphic) => {
-        if (graphic.attributes.FID) {
+        if (graphic.attributes.modelAttributes) {
+          ctx.graphicsLayer.remove(graphic);
           ctx.graphicsLayer.add(new Graphic({
             geometry: new Polygon({
               rings: (graphic.geometry as Polygon).rings,
               spatialReference: graphic.geometry!.spatialReference
             }),
-            symbol: FillSymbolUtils.red()
+            symbol: FillSymbolUtils.green()
           }));
         }
       });

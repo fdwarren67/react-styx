@@ -9,6 +9,9 @@ import {ModelAttributes} from "../utils/ModelAttributes.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
+import TextSymbol from "@arcgis/core/symbols/TextSymbol";
+import {GeometryUtils} from "../utils/GeometryUtils.tsx";
+import {offset} from "@arcgis/core/rest/geometryService";
 
 export class LineBuilder implements Builder {
   readonly builderType = BuilderTypes.LineBuilder;
@@ -17,6 +20,7 @@ export class LineBuilder implements Builder {
   lineGraphic: Graphic;
   anchorGraphic: Graphic;
   endPointGraphic: Graphic;
+  labelGraphic: Graphic;
   finishCallback: ((model: LineModel) => void) | undefined;
 
   constructor(anchorPoint: Point, graphics: Collection<Graphic>) {
@@ -50,7 +54,12 @@ export class LineBuilder implements Builder {
       }
     });
 
-    this.graphics.addMany([this.lineGraphic, this.anchorGraphic, this.endPointGraphic]);
+    this.labelGraphic = new Graphic({
+      geometry: GeometryUtils.centerPoint([this.model.anchorPoint, this.model.endPoint]),
+      symbol: this.calcLabelSymbol()
+    });
+
+    this.graphics.addMany([this.lineGraphic, this.anchorGraphic, this.endPointGraphic, this.labelGraphic]);
   }
 
   move(evx: MouseEventModel): void {
@@ -62,6 +71,9 @@ export class LineBuilder implements Builder {
     });
 
     this.endPointGraphic.geometry = this.model.endPoint;
+
+    this.labelGraphic.geometry = GeometryUtils.centerPoint([this.model.anchorPoint, this.model.endPoint]);
+    this.labelGraphic.symbol = this.calcLabelSymbol();
   }
 
   click(evx: MouseEventModel): void {
@@ -90,5 +102,36 @@ export class LineBuilder implements Builder {
 
   onFinish(finishCallback: (model: LineModel) => void): void {
     this.finishCallback = finishCallback
+  }
+
+  calcLabelSymbol(): TextSymbol {
+    const length = Math.round(GeometryUtils.distance([this.model.anchorPoint.x, this.model.anchorPoint.y], [this.model.endPoint.x, this.model.endPoint.y])).toLocaleString();
+    const azimuth = Math.round(GeometryUtils.azimuth(this.model.anchorPoint, this.model.endPoint) * 100) / 100;
+
+    const multi = azimuth / Math.abs(azimuth);
+    const radians = -GeometryUtils.radians(this.model.anchorPoint, this.model.endPoint);
+    const offsetY = (multi * Math.cos(radians) * 10) + 'px';
+    const offsetX = (multi * Math.sin(radians) * 10) + 'px';
+    let angle = -GeometryUtils.degrees(this.model.endPoint, this.model.anchorPoint)
+    if (azimuth > 0) {
+      angle += 180;
+    }
+
+    return new TextSymbol({
+      text: `${length} ft        ${azimuth}\u00B0`,
+      angle: angle,
+      xoffset: offsetX,
+      yoffset: offsetY,
+      color: "black",
+      haloColor: "white",
+      haloSize: "1px",
+      font: {
+        size: 12,
+        family: "sans-serif",
+        weight: "bold"
+      },
+      horizontalAlignment: "center",
+      verticalAlignment: "middle"
+    });
   }
 }

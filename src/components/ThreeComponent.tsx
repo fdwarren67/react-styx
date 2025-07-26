@@ -54,7 +54,6 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
     if (bounds.length > 0 && bounds.getItemAt(0)) {
       setBoundaryRing((bounds.getItemAt(0)!.geometry as Polygon).rings[0]);
     }
-    console.log('ctxState');
   }, [ctxState]);
 
   // boundaryRing
@@ -73,7 +72,6 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
     MeshUtils.loadHeightMap(-60, 0x8888cc, mesh => {
       scene.current!.add(mesh);
     });
-    console.log('boundaryRing');
   }, [boundaryRing]);
 
   // blocks

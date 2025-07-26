@@ -33,7 +33,7 @@ export class CompassHandler {
   }
 
   public updateFromVertices(vertices: Point[]): void {
-    this.centerPoint = GeometryUtils.pointsToPolygon(vertices).centroid!;
+    this.centerPoint = GeometryUtils.pointsToPolygon(vertices).extent!.center!;
     this.azimuth = GeometryUtils.convertPathToAzimuth([[vertices[0].x, vertices[0].y], [vertices[1].x, vertices[1].y]]);
     this.updateGraphics();
   }
@@ -46,8 +46,8 @@ export class CompassHandler {
   }
 
   public static createAzimuthGeometry(centerPoint: Point, azimuth: number): Polyline {
-    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth, 20000);
-    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 180, 20000);
+    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth, 25000);
+    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 180, 25000);
 
     return new Polyline({
       paths: [[[a1.x, a1.y], [a2.x, a2.y]]],
@@ -56,8 +56,8 @@ export class CompassHandler {
   }
 
   public static createNormalGeometry(centerPoint: Point, azimuth: number): Polyline {
-    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth + 90, 20000);
-    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 90, 20000);
+    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth + 90, 15000);
+    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 90, 15000);
 
     return new Polyline({
       paths: [[[a1.x, a1.y], [a2.x, a2.y]]],
@@ -82,7 +82,7 @@ export class CompassHandler {
         style: "long-dash"
       }),
       attributes: {
-        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.Compass, 0)
+        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassCircle, 0)
       }
     })
   }
@@ -91,12 +91,12 @@ export class CompassHandler {
       return new Graphic({
         geometry: line,
         symbol: new SimpleLineSymbol({
-          color: "#ff000011",
+          color: "#ff000022",
           width: "3px",
           style: "long-dash"
         }),
         attributes: {
-          modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.Compass, 0)
+          modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassAzimuth, 0)
         }
       });
   }
@@ -105,12 +105,12 @@ export class CompassHandler {
     return new Graphic({
       geometry: line,
       symbol: new SimpleLineSymbol({
-        color: "#ff000011",
+        color: "#ff000022",
         width: "2px",
         style: "short-dash"
       }),
       attributes: {
-        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.Compass, 0)
+        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassNormal, 0)
       }
     });
   }

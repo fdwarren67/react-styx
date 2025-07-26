@@ -83,9 +83,9 @@ const MainContainer = () => {
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">New</a>
                 <ul className="dropdown-menu">
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawLine)}>Wellbore</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawPolygon)}>Block</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawRect)}>Rectangular</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawStick)}>Wellbore</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockPolygon)}>Block</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockRect)}>Rectangular</a></li>
                 </ul>
               </li>
             </ul>

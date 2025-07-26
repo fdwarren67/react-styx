@@ -1,15 +1,15 @@
 import Graphic from '@arcgis/core/Graphic';
 import {Point, Polyline} from '@arcgis/core/geometry';
 import Collection from "@arcgis/core/core/Collection";
-import {PointSymbolUtils} from "../utils/PointSymbolUtils.tsx";
-import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
-import {LineSymbolUtils} from "../utils/LineSymbolUtils.tsx";
+import {PointSymbolUtils} from "../symbols/PointSymbolUtils.tsx";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {GeometryUtils} from "../utils/GeometryUtils.tsx";
+import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
+import {StickSymbolUtils} from "../symbols/StickSymbolUtils.tsx";
 
 export class LineBuilder implements Builder {
   readonly builderType = BuilderTypes.LineBuilder;
@@ -21,7 +21,7 @@ export class LineBuilder implements Builder {
   labelGraphic: Graphic;
   finishCallback: ((model: LineModel) => void) | undefined;
 
-  constructor(anchorPoint: Point, graphics: Collection<Graphic>) {
+  constructor(anchorPoint: Point, graphics: Collection<Graphic>, modelRole: ModelRoles) {
     this.model = new LineModel(anchorPoint);
     this.graphics = graphics;
 
@@ -30,10 +30,10 @@ export class LineBuilder implements Builder {
         paths: [[[this.model.anchorPoint.x, this.model.anchorPoint.y], [this.model.endPoint.x, this.model.endPoint.y]]],
         spatialReference: this.model.anchorPoint.spatialReference
       }),
-      symbol: BuildingSymbolUtils.lineSymbol(),
+      symbol: modelRole === ModelRoles.Block ? BlockSymbolUtils.building() : StickSymbolUtils.building(),
       attributes: {
         model: this.model,
-        role: ModelRoles.Line,
+        role: modelRole,
         index: 0
       }
     });
@@ -89,7 +89,7 @@ export class LineBuilder implements Builder {
     this.move(evx);
 
     if (this.finishCallback) {
-      this.lineGraphic.symbol = LineSymbolUtils.blackSolid();
+      this.lineGraphic.symbol = StickSymbolUtils.normal();
       this.endPointGraphic.symbol = PointSymbolUtils.blackCircle();
       this.finishCallback(this.model);
     }

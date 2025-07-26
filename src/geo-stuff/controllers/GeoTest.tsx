@@ -2,9 +2,9 @@ import * as projectOperator from "@arcgis/core/geometry/operators/projectOperato
 import {Point, Polygon} from "@arcgis/core/geometry";
 import {MapController} from "./MapController.tsx";
 import Graphic from "@arcgis/core/Graphic";
-import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import {ModelRoles} from "../utils/Constants.tsx";
+import {AreaSymbolUtils} from "../symbols/AreaSymbolUtils.tsx";
 
 export class GeoTest {
   public static test(ctx: MapController) {
@@ -29,7 +29,7 @@ export class GeoTest {
 
     ctx.graphicsLayer.add(new Graphic({
       geometry: polygon,
-      symbol: FillSymbolUtils.green(),
+      symbol: AreaSymbolUtils.normal(),
       attributes: {
         model: model,
         role: ModelRoles.Boundary,

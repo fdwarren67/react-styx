@@ -46,8 +46,8 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
 
   // graphics layer
   useEffect(() => {
-    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Polygon).toArray());
-    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Line).toArray());
+    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Block && g.geometry!.type === 'polygon').toArray());
+    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Stick).toArray());
 
     const bounds = ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Boundary);
     if (bounds.length > 0 && bounds.getItemAt(0)) {

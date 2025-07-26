@@ -1,7 +1,7 @@
 import {LineBuilder} from "../builders/LineBuilder.tsx";
 import {RectBuilder} from "../builders/RectBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
-import {BuilderTypes} from "../utils/Constants.tsx";
+import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 
@@ -19,7 +19,7 @@ export class RectBuildHandler {
       }
     }
     else {
-      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics);
+      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics, ModelRoles.Block);
       ctx.currentModel = ctx.currentBuilder.model;
       ctx.currentBuilder.onFinish((model) => {
         ctx.currentBuilder?.destroy();

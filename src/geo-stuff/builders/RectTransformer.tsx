@@ -2,15 +2,14 @@ import Graphic from '@arcgis/core/Graphic';
 import {Point, Polygon, Polyline} from '@arcgis/core/geometry';
 import {GeometryUtils} from '../utils/GeometryUtils.tsx';
 import Collection from "@arcgis/core/core/Collection";
-import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
-import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import Transformation from "@arcgis/core/geometry/operators/support/Transformation";
 import * as transOp from "@arcgis/core/geometry/operators/affineTransformOperator.js";
-import {PointSymbolUtils} from "../utils/PointSymbolUtils.tsx";
+import {PointSymbolUtils} from "../symbols/PointSymbolUtils.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
+import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 
 export class RectTransformer implements Builder {
   readonly builderType = BuilderTypes.RectTransformer;
@@ -31,7 +30,7 @@ export class RectTransformer implements Builder {
     this.attr = graphic.attributes;
     this.model = this.attr.model as PolygonModel;
     this.rectGraphic = graphic;
-    this.rectGraphic.symbol = BuildingSymbolUtils.fillSymbol();
+    this.rectGraphic.symbol = BlockSymbolUtils.normal();
 
     this.model.vertices.forEach((pt, idx) => {
       this.vertexGraphics.push(new Graphic({
@@ -46,7 +45,7 @@ export class RectTransformer implements Builder {
 
       this.edgeGraphics.push(new Graphic({
         geometry: this.createEdgeGeometry(pt, this.model.vertices[(idx + 1) % 4]),
-        symbol: BuildingSymbolUtils.thickLineSymbol(),
+        symbol: BlockSymbolUtils.thickSegment(),
         attributes: {
           model: this.model,
           role: ModelRoles.Edge,
@@ -161,11 +160,11 @@ export class RectTransformer implements Builder {
 
   activate(): void {
     this.graphics.addMany([...this.vertexGraphics, ...this.edgeGraphics]);
-    this.rectGraphic.symbol = BuildingSymbolUtils.fillSymbol();
+    this.rectGraphic.symbol = BlockSymbolUtils.selected();
   }
 
   deactivate(): void {
-    this.rectGraphic.symbol = FillSymbolUtils.red();
+    this.rectGraphic.symbol = BlockSymbolUtils.normal();
     this.graphics.removeMany([...this.vertexGraphics, ...this.edgeGraphics]);
     if (this.finishCallback) {
       this.finishCallback(this.model);

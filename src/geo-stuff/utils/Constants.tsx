@@ -1,7 +1,7 @@
 export enum ModelRoles {
   None,
-  Line,
-  Polygon,
+  Stick,
+  Block,
   AnchorPoint,
   EndPoint,
   Vertex,
@@ -30,11 +30,11 @@ export class BuilderTypes {
 
 export enum MapModes {
   None,
-  DrawLine,
-  DrawRect,
-  DrawPolygon,
-  TransformRect,
-  ResizeRect
+  DrawStick,
+  DrawBlockRect,
+  DrawBlockPolygon,
+  TransformBlock,
+  ResizeBlock
 }
 
 export class Constants {

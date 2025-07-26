@@ -7,7 +7,7 @@ import {PolygonModel} from "../models/PolygonModel.tsx";
 
 export class RectTransformHandler {
   public static click(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
-    if (graphic.attributes.role === ModelRoles.Polygon) {
+    if (graphic.attributes.role === ModelRoles.Block) {
       if (ctx.currentModel.modelId !== graphic.attributes.model.modelId) {
         if (ctx.currentBuilder && ctx.currentBuilder as RectTransformer) {
           ctx.currentBuilder.deactivate();

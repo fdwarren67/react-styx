@@ -3,15 +3,14 @@ import {Point, Polygon} from '@arcgis/core/geometry';
 import {GeometryUtils} from '../utils/GeometryUtils.tsx';
 import Collection from "@arcgis/core/core/Collection";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
-import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
-import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
+import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 
 export class PolygonBuilder implements Builder {
   readonly builderType = BuilderTypes.PolygonBuilder;
@@ -25,7 +24,7 @@ export class PolygonBuilder implements Builder {
   constructor(vertices: Point[], graphics: Collection<Graphic>) {
     this.model = new PolygonModel(vertices);
     this.graphics = graphics;
-    this.fillSymbol = BuildingSymbolUtils.fillSymbol();
+    this.fillSymbol = BlockSymbolUtils.building();
 
     this.polygonGraphic = new Graphic({
       geometry: new Polygon({
@@ -35,7 +34,7 @@ export class PolygonBuilder implements Builder {
       symbol: this.fillSymbol,
       attributes: {
         model: this.model,
-        role: ModelRoles.Polygon,
+        role: ModelRoles.Block,
         index: 0
       }
     });
@@ -87,7 +86,7 @@ export class PolygonBuilder implements Builder {
 
   dblclick(evx: MouseEventModel) {
     this.click(evx);
-    this.polygonGraphic.symbol = FillSymbolUtils.red();
+    this.polygonGraphic.symbol = BlockSymbolUtils.normal();
 
     const idx = this.labelGraphics.length - 1;
     this.labelGraphics[idx].geometry = GeometryUtils.centerPoint([this.model.vertices[idx], this.model.vertices[0]]);

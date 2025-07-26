@@ -1,6 +1,6 @@
 import {LineBuilder} from "../builders/LineBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
-import {BuilderTypes} from "../utils/Constants.tsx";
+import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {PolygonBuilder} from "../builders/PolygonBuilder.tsx";
 
@@ -18,7 +18,7 @@ export class PolygonBuildHandler {
       }
     }
     else {
-      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics);
+      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics, ModelRoles.Block);
       ctx.currentModel = ctx.currentBuilder.model;
       ctx.currentBuilder.onFinish((model) => {
         ctx.currentBuilder?.destroy();

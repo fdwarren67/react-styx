@@ -3,11 +3,13 @@ import Graphic from "@arcgis/core/Graphic";
 import Circle from "@arcgis/core/geometry/Circle";
 import {SimpleLineSymbol} from "@arcgis/core/symbols";
 import {GeometryUtils} from "../utils/GeometryUtils.tsx";
-import {PointSymbolUtils} from "../utils/PointSymbolUtils.tsx";
+import {PointSymbolUtils} from "../symbols/PointSymbolUtils.tsx";
 import {ModelRoles} from "../utils/Constants.tsx";
 import {EmptyModel} from "../models/EmptyModel.tsx";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 
 export class CompassHandler {
+  graphicsLayer: GraphicsLayer | undefined;
   centerPoint: Point;
   azimuth: number;
   centerGraphic: Graphic;
@@ -16,9 +18,10 @@ export class CompassHandler {
   innerCircleGraphic: Graphic;
   outerCircleGraphic: Graphic;
 
-  constructor(centerPoint: Point, azimuth: number) {
+  constructor(centerPoint: Point, azimuth: number, graphicsLayer: GraphicsLayer) {
     this.centerPoint = centerPoint;
     this.azimuth = azimuth;
+    this.graphicsLayer = graphicsLayer;
 
     this.centerGraphic = new Graphic({
       geometry: centerPoint,
@@ -29,6 +32,8 @@ export class CompassHandler {
     this.normalGraphic = CompassHandler.createNormal(CompassHandler.createNormalGeometry(centerPoint, azimuth));
     this.innerCircleGraphic = CompassHandler.createCircle(CompassHandler.createCircleGeometry(centerPoint, 5280 / 2));
     this.outerCircleGraphic = CompassHandler.createCircle(CompassHandler.createCircleGeometry(centerPoint, 5280));
+
+    this.graphicsLayer.addMany([this.azimuthGraphic, this.normalGraphic, this.innerCircleGraphic, this.outerCircleGraphic]);
   }
 
   public updateFromVertices(vertices: Point[]): void {

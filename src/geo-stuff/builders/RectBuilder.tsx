@@ -3,8 +3,6 @@ import {Point, Polygon} from '@arcgis/core/geometry';
 import {GeometryUtils} from '../utils/GeometryUtils.tsx';
 import Collection from "@arcgis/core/core/Collection";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
-import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
-import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
@@ -12,6 +10,7 @@ import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
+import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 
 export class RectBuilder implements Builder {
   readonly builderType = BuilderTypes.RectBuilder;
@@ -26,7 +25,7 @@ export class RectBuilder implements Builder {
   constructor(vertices: Point[], graphics: Collection<Graphic>) {
     this.model = new PolygonModel(vertices);
     this.graphics = graphics;
-    this.symbol = BuildingSymbolUtils.fillSymbol();
+    this.symbol = BlockSymbolUtils.building();
 
     this.rectGraphic = new Graphic({
       geometry: new Polygon({
@@ -36,7 +35,7 @@ export class RectBuilder implements Builder {
       symbol: this.symbol,
       attributes: {
         model: this.model,
-        role: ModelRoles.Polygon,
+        role: ModelRoles.Block,
         index: 0
       }
     });
@@ -113,10 +112,11 @@ export class RectBuilder implements Builder {
   }
 
   click(evx: MouseEventModel): void {
-    this.rectGraphic.symbol = FillSymbolUtils.red();
+    this.rectGraphic.symbol = BlockSymbolUtils.building();
     this.move(evx);
 
     if (this.finishCallback) {
+      this.rectGraphic.symbol = BlockSymbolUtils.normal();
       this.finishCallback(this.model);
     }
   }
@@ -126,7 +126,7 @@ export class RectBuilder implements Builder {
   }
 
   activate(): void {
-    this.rectGraphic.symbol = FillSymbolUtils.red();
+    this.rectGraphic.symbol = BlockSymbolUtils.normal();
   }
 
   deactivate(): void {

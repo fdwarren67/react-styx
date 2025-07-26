@@ -1,14 +1,15 @@
 import {LineBuilder} from "../builders/LineBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
+import {ModelRoles} from "../utils/Constants.tsx";
 
 export class LineBuildHandler {
-  public static click(ctx: MapController, evx: MouseEventModel): void {
+  public static click(ctx: MapController, evx: MouseEventModel, modelRole: ModelRoles): void {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.click(evx);
     }
     else {
-      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics);
+      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics, modelRole);
       ctx.currentModel = ctx.currentBuilder.model;
       ctx.currentBuilder.activate();
       ctx.currentBuilder.onFinish(() => {

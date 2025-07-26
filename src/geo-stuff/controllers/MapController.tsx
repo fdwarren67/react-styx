@@ -1,5 +1,5 @@
 import MapView from "@arcgis/core/views/MapView";
-import {Point, Polygon, SpatialReference} from "@arcgis/core/geometry";
+import {Point, SpatialReference} from "@arcgis/core/geometry";
 import {Constants, MapModes, ModelRoles} from "../utils/Constants.tsx";
 import {LineBuildHandler} from "../handlers/LineBuildHandler.tsx";
 import {RectBuildHandler} from "../handlers/RectBuildHandler.tsx";
@@ -18,12 +18,14 @@ import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator.js";
 import {PolygonBuildHandler} from "../handlers/PolygonBuildHandler.tsx";
 import {CompassHandler} from "../handlers/CompassHandler.tsx";
-import {SelectedSymbolUtils} from "../utils/SelectedSymbolUtils.tsx";
+import {SymbolUtils} from "../symbols/SymbolUtils.tsx";
 
 export class MapController {
   public view: MapView | undefined;
   public statePlane: SpatialReference | undefined;
   public statePlaneName = '';
+
+  public selectedGraphic: Graphic | undefined;
 
   public currentModel = new EmptyModel();
   public currentBuilder: Builder | undefined;
@@ -41,8 +43,7 @@ export class MapController {
       id: Constants.graphicsLayerName
     });
 
-    this.compassHandler = new CompassHandler(new Point(), 0);
-    this.graphicsLayer.addMany([this.compassHandler.azimuthGraphic, this.compassHandler.normalGraphic, this.compassHandler.innerCircleGraphic, this.compassHandler.outerCircleGraphic]);
+    this.compassHandler = new CompassHandler(new Point(), 0, this.graphicsLayer);
   }
 
   public toStatePlane(event: ViewClickEvent | ViewDoubleClickEvent | ViewDragEvent | ViewPointerMoveEvent): Point {
@@ -56,8 +57,8 @@ export class MapController {
     }
     this.currentBuilder = undefined;
 
-    if (mode === MapModes.TransformRect) {
-      const graphic = this.graphicsLayer.graphics.find(g => g.attributes.model.modelId === this.currentModel.modelId && g.attributes.role === ModelRoles.Polygon);
+    if (mode === MapModes.TransformBlock) {
+      const graphic = this.graphicsLayer.graphics.find(g => g.attributes.model.modelId === this.currentModel.modelId && g.attributes.role === ModelRoles.Block);
       if (graphic) {
         this.currentBuilder = new RectTransformer(graphic, this.graphicsLayer.graphics);
         this.currentBuilder.activate();
@@ -65,38 +66,55 @@ export class MapController {
     }
   }
 
-  public click(event: ViewClickEvent): void {
-    if (this.currentMode === MapModes.None) {
-      this.hitTest(event, (ctx: MapController, evx: MouseEventModel, graphic: Graphic) => {
-        if (graphic.attributes.model) {
-          ctx.graphicsLayer.remove(graphic);
-          ctx.graphicsLayer.add(new Graphic({
-            geometry: new Polygon({
-              rings: (graphic.geometry as Polygon).rings,
-              spatialReference: graphic.geometry!.spatialReference
-            }),
-            symbol: SelectedSymbolUtils.fillSymbol()
-          }));
-        }
-      });
+  public selectGraphic(graphic: Graphic): void {
+    if (this.selectedGraphic) {
+      this.selectedGraphic.symbol = SymbolUtils.normal(this.selectedGraphic.attributes.role);
+    }
+    this.selectedGraphic = graphic;
+    graphic.symbol = SymbolUtils.selected(graphic.attributes.role)
 
-      return;
+    if (graphic.attributes.role === ModelRoles.Stick) {
+      this.compassHandler.updateFromVertices([graphic.attributes.model.anchorPoint, graphic.attributes.model.endPoint]);
+    }
+    else {
+      this.compassHandler.updateFromVertices(graphic.attributes.model.vertices);
+    }
+  }
+
+  public async click(event: ViewClickEvent): Promise<void> {
+    if (this.currentMode === MapModes.None) {
+      const response = await this.view!.hitTest(event);
+
+      if (response.results && response.results.length > 0) {
+        const gh = response.results.map(r => r as MapViewGraphicHit);
+
+        const sticks = gh.filter(r => r.graphic.attributes && r.graphic.attributes.role === ModelRoles.Stick);
+        if (sticks.length > 0) {
+          this.selectGraphic(sticks[0].graphic);
+          return;
+        }
+        const blocks = gh.filter(r => r.graphic.attributes && r.graphic.attributes.role === ModelRoles.Block);
+        if (blocks.length > 0) {
+          this.selectGraphic(blocks[0].graphic);
+          return;
+        }
+      }
     }
 
     event.stopPropagation();
 
     const evx = new MouseEventModel(this.toStatePlane(event), event.buttons, 'click');
     switch (this.currentMode) {
-      case MapModes.DrawLine:
-        LineBuildHandler.click(this, evx);
+      case MapModes.DrawStick:
+        LineBuildHandler.click(this, evx, ModelRoles.Stick);
         break;
-      case MapModes.DrawRect:
+      case MapModes.DrawBlockRect:
         RectBuildHandler.click(this, evx);
         break;
-      case MapModes.DrawPolygon:
+      case MapModes.DrawBlockPolygon:
         PolygonBuildHandler.click(this, evx);
         break;
-      case MapModes.TransformRect:
+      case MapModes.TransformBlock:
         this.hitTest(event, RectTransformHandler.click);
         break;
     }
@@ -113,16 +131,16 @@ export class MapController {
 
     const evx = new MouseEventModel(this.toStatePlane(event), event.buttons, 'dblclick');
     switch (this.currentMode) {
-      case MapModes.DrawLine:
-        LineBuildHandler.click(this, evx);
+      case MapModes.DrawStick:
+        LineBuildHandler.click(this, evx, ModelRoles.Stick);
         break;
-      case MapModes.DrawRect:
+      case MapModes.DrawBlockRect:
         RectBuildHandler.click(this, evx);
         break;
-      case MapModes.DrawPolygon:
+      case MapModes.DrawBlockPolygon:
         PolygonBuildHandler.dblclick(this, evx);
         break;
-      case MapModes.TransformRect:
+      case MapModes.TransformBlock:
         this.hitTest(event, RectTransformHandler.dblclick);
         break;
     }
@@ -139,22 +157,22 @@ export class MapController {
 
     const evx = new MouseEventModel(this.toStatePlane(event), event.button, 'move');
     switch (this.currentMode) {
-      case MapModes.DrawLine:
+      case MapModes.DrawStick:
         if (LineBuildHandler.move(this, evx)) {
           Promise.all(this.moveListeners.map(fn => fn()));
         }
         break;
-      case MapModes.DrawRect:
+      case MapModes.DrawBlockRect:
         if (RectBuildHandler.move(this, evx)) {
           Promise.all(this.moveListeners.map(fn => fn()));
         }
         break;
-      case MapModes.DrawPolygon:
+      case MapModes.DrawBlockPolygon:
         if (PolygonBuildHandler.move(this, evx)) {
           Promise.all(this.moveListeners.map(fn => fn()));
         }
         break;
-      case MapModes.TransformRect:
+      case MapModes.TransformBlock:
         if (RectTransformHandler.move(this, evx)) {
           Promise.all(this.moveListeners.map(fn => fn()));
         }
@@ -170,7 +188,7 @@ export class MapController {
     event.stopPropagation();
 
     switch (this.currentMode) {
-      case MapModes.TransformRect:
+      case MapModes.TransformBlock:
         this.hitTest(event, RectTransformHandler.drag);
         Promise.all(this.dragListeners.map(fn => fn()));
         break;

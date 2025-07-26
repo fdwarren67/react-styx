@@ -83,7 +83,7 @@ const MapComponent = forwardRef<MapHandle>((props, ref) => {
     map.add(layer);
     map.add(ctx.graphicsLayer);
 
-    ctx.view.on('click', (event: ViewClickEvent) => {
+    ctx.view.on('click', async (event: ViewClickEvent) => {
       ctx.click(event);
     });
 

@@ -3,8 +3,7 @@ import {Point, Polygon} from "@arcgis/core/geometry";
 import {MapController} from "./MapController.tsx";
 import Graphic from "@arcgis/core/Graphic";
 import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
-import {ModelAttributes} from "../utils/ModelAttributes.tsx";
-import {RectModel} from "../models/RectModel.tsx";
+import {PolygonModel} from "../models/PolygonModel.tsx";
 import {ModelRoles} from "../utils/Constants.tsx";
 
 export class GeoTest {
@@ -22,7 +21,7 @@ export class GeoTest {
       spatialReference: ctx.statePlane
     });
 
-    const model = new RectModel(polygon.rings[0].map(r => new Point({
+    const model = new PolygonModel(polygon.rings[0].map(r => new Point({
       x: r[0],
       y: r[1],
       spatialReference: ctx.statePlane
@@ -32,7 +31,9 @@ export class GeoTest {
       geometry: polygon,
       symbol: FillSymbolUtils.green(),
       attributes: {
-        modelAttributes: new ModelAttributes(model, ModelRoles.Boundary, 0)
+        model: model,
+        role: ModelRoles.Boundary,
+        index: 0
       }
     }));
 

@@ -3,28 +3,30 @@ import {Point, Polygon} from '@arcgis/core/geometry';
 import {GeometryUtils} from '../utils/GeometryUtils.tsx';
 import Collection from "@arcgis/core/core/Collection";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
-import {EditingSymbolUtils} from "../utils/EditingSymbolUtils.tsx";
+import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
 import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
-import {RectModel} from "../models/RectModel.tsx";
+import {PolygonModel} from "../models/PolygonModel.tsx";
 import {LineModel} from "../models/LineModel.tsx";
-import {ModelAttributes} from "../utils/ModelAttributes.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
+import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 
 export class RectBuilder implements Builder {
   readonly builderType = BuilderTypes.RectBuilder;
   graphics: Collection<Graphic>;
-  model: RectModel;
+  model: PolygonModel;
   rectGraphic: Graphic;
+  anchorLabelGraphic: Graphic;
+  sideLabelGraphic: Graphic;
   symbol: SimpleFillSymbol;
-  finishCallback: ((model: RectModel) => void) | undefined;
+  finishCallback: ((model: PolygonModel) => void) | undefined;
 
   constructor(vertices: Point[], graphics: Collection<Graphic>) {
-    this.model = new RectModel(vertices);
+    this.model = new PolygonModel(vertices);
     this.graphics = graphics;
-    this.symbol = EditingSymbolUtils.fillSymbol();
+    this.symbol = BuildingSymbolUtils.fillSymbol();
 
     this.rectGraphic = new Graphic({
       geometry: new Polygon({
@@ -33,11 +35,33 @@ export class RectBuilder implements Builder {
       }),
       symbol: this.symbol,
       attributes: {
-        modelAttributes: new ModelAttributes(this.model, ModelRoles.Polygon, 0)
+        model: this.model,
+        role: ModelRoles.Polygon,
+        index: 0
       }
     });
 
-    graphics.add(this.rectGraphic);
+    this.anchorLabelGraphic = new Graphic({
+      geometry: GeometryUtils.centerPoint([vertices[0], vertices[1]]),
+      symbol: this.calcLabelSymbol(vertices[0], vertices[1]),
+      attributes: {
+        model: this.model,
+        role: ModelRoles.LineLabel,
+        index: 0
+      }
+    });
+
+    this.sideLabelGraphic = new Graphic({
+      geometry: GeometryUtils.centerPoint([vertices[1], vertices[2]]),
+      symbol: this.calcLabelSymbol(vertices[1], vertices[2]),
+      attributes: {
+        model: this.model,
+        role: ModelRoles.LineLabel,
+        index: 0
+      }
+    });
+
+    graphics.addMany([this.rectGraphic, this.anchorLabelGraphic, this.sideLabelGraphic]);
   }
 
   public static fromBasePoints(model: Model, graphics: Collection<Graphic>) {
@@ -83,6 +107,9 @@ export class RectBuilder implements Builder {
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
       spatialReference: this.model.vertices[0].spatialReference
     });
+
+    this.sideLabelGraphic.geometry = GeometryUtils.centerPoint([this.model.vertices[1], this.model.vertices[2]]);
+    this.sideLabelGraphic.symbol = this.calcLabelSymbol(this.model.vertices[1], this.model.vertices[2])
   }
 
   click(evx: MouseEventModel): void {
@@ -109,7 +136,38 @@ export class RectBuilder implements Builder {
     this.graphics.remove(this.rectGraphic);
   }
 
-  onFinish(finishCallback: (model: RectModel) => void): void {
+  onFinish(finishCallback: (model: PolygonModel) => void): void {
     this.finishCallback = finishCallback
+  }
+
+  calcLabelSymbol(pt1: Point, pt2: Point): TextSymbol {
+    const length = Math.round(GeometryUtils.distance([pt1.x, pt1.y], [pt2.x, pt2.y])).toLocaleString();
+    const azimuth = Math.round(GeometryUtils.azimuth(pt1, pt2) * 100) / 100;
+
+    const multi = azimuth / Math.abs(azimuth);
+    const radians = -GeometryUtils.radians(pt1, pt2);
+    const offsetY = (multi * Math.cos(radians) * 10) + 'px';
+    const offsetX = (multi * Math.sin(radians) * 10) + 'px';
+    let angle = -GeometryUtils.degrees(pt2, pt1)
+    if (azimuth > 0) {
+      angle += 180;
+    }
+
+    return new TextSymbol({
+      text: `${length} ft        ${azimuth}\u00B0`,
+      angle: angle,
+      xoffset: offsetX,
+      yoffset: offsetY,
+      color: "#ff000066",
+      haloColor: "white",
+      haloSize: "1px",
+      font: {
+        size: 12,
+        family: "sans-serif",
+        weight: "bold"
+      },
+      horizontalAlignment: "center",
+      verticalAlignment: "middle"
+    });
   }
 }

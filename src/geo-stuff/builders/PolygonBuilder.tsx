@@ -5,26 +5,27 @@ import Collection from "@arcgis/core/core/Collection";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
 import {LineModel} from "../models/LineModel.tsx";
-import {ModelAttributes} from "../utils/ModelAttributes.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
-import {EditingSymbolUtils} from "../utils/EditingSymbolUtils.tsx";
-import {RectModel} from "../models/RectModel.tsx";
+import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
+import {PolygonModel} from "../models/PolygonModel.tsx";
+import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 
 export class PolygonBuilder implements Builder {
   readonly builderType = BuilderTypes.PolygonBuilder;
   graphics: Collection<Graphic>;
-  model: RectModel;
+  model: PolygonModel;
   polygonGraphic: Graphic;
   fillSymbol: SimpleFillSymbol;
-  finishCallback: ((model: RectModel) => void) | undefined;
+  labelGraphics: Graphic[] = [];
+  finishCallback: ((model: PolygonModel) => void) | undefined;
 
   constructor(vertices: Point[], graphics: Collection<Graphic>) {
-    this.model = new RectModel(vertices);
+    this.model = new PolygonModel(vertices);
     this.graphics = graphics;
-    this.fillSymbol = EditingSymbolUtils.fillSymbol();
+    this.fillSymbol = BuildingSymbolUtils.fillSymbol();
 
     this.polygonGraphic = new Graphic({
       geometry: new Polygon({
@@ -33,11 +34,17 @@ export class PolygonBuilder implements Builder {
       }),
       symbol: this.fillSymbol,
       attributes: {
-        modelAttributes: new ModelAttributes(this.model, ModelRoles.Polygon, 0)
+        model: this.model,
+        role: ModelRoles.Polygon,
+        index: 0
       }
     });
 
-    graphics.add(this.polygonGraphic);
+    for (let i = 0; i < vertices.length - 1; i++) {
+      this.pushLabelGraphic(vertices[i], vertices[i + 1], i);
+    }
+
+    graphics.addMany([...this.labelGraphics, this.polygonGraphic]);
   }
 
   public static fromBasePoints(model: Model, graphics: Collection<Graphic>): PolygonBuilder {
@@ -59,17 +66,32 @@ export class PolygonBuilder implements Builder {
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
       spatialReference: this.model.vertices[0].spatialReference
     });
+
+    const idx = this.labelGraphics.length - 2;
+    this.labelGraphics[idx].geometry = GeometryUtils.centerPoint([this.model.vertices[idx], this.model.vertices[idx + 1]]);
+    this.labelGraphics[idx].symbol = this.calcLabelSymbol(this.model.vertices[idx], this.model.vertices[idx + 1]);
+
+    this.labelGraphics[idx + 1].geometry = GeometryUtils.centerPoint([this.model.vertices[idx + 1], evx.projectedPoint]);
+    this.labelGraphics[idx + 1].symbol = this.calcLabelSymbol(this.model.vertices[idx + 1], evx.projectedPoint);
   }
 
   click(evx: MouseEventModel): void {
     this.move(evx);
 
     this.model.vertices.push(GeometryUtils.offsetPoint(evx.projectedPoint, 5, 0));
+
+    const idx = this.model.vertices.length - 2;
+    this.pushLabelGraphic(this.model.vertices[idx], this.model.vertices[idx + 1], idx);
+    this.graphics.add(this.labelGraphics[this.labelGraphics.length - 1]);
   }
 
   dblclick(evx: MouseEventModel) {
     this.click(evx);
     this.polygonGraphic.symbol = FillSymbolUtils.red();
+
+    const idx = this.labelGraphics.length - 1;
+    this.labelGraphics[idx].geometry = GeometryUtils.centerPoint([this.model.vertices[idx], this.model.vertices[0]]);
+    this.labelGraphics[idx].symbol = this.calcLabelSymbol(this.model.vertices[idx], this.model.vertices[0]);
 
     if (this.finishCallback) {
       this.finishCallback(this.model);
@@ -87,7 +109,50 @@ export class PolygonBuilder implements Builder {
     this.graphics.remove(this.polygonGraphic);
   }
 
-  onFinish(finishCallback: (model: RectModel) => void): void {
+  onFinish(finishCallback: (model: PolygonModel) => void): void {
     this.finishCallback = finishCallback
+  }
+
+  private pushLabelGraphic(pt1: Point, pt2: Point, idx: number): void {
+    this.labelGraphics.push(new Graphic({
+      geometry: GeometryUtils.centerPoint([pt1, pt2]),
+      symbol: this.calcLabelSymbol(pt1, pt2),
+      attributes: {
+        model: this.model,
+        role: ModelRoles.LineLabel,
+        index: idx
+      }
+    }));
+  }
+
+  private calcLabelSymbol(pt1: Point, pt2: Point): TextSymbol {
+    const length = Math.round(GeometryUtils.distance([pt1.x, pt1.y], [pt2.x, pt2.y])).toLocaleString();
+    const azimuth = Math.round(GeometryUtils.azimuth(pt1, pt2) * 100) / 100;
+
+    const multi = azimuth / Math.abs(azimuth);
+    const radians = -GeometryUtils.radians(pt1, pt2);
+    const offsetY = (multi * Math.cos(radians) * 10) + 'px';
+    const offsetX = (multi * Math.sin(radians) * 10) + 'px';
+    let angle = -GeometryUtils.degrees(pt2, pt1)
+    if (azimuth > 0) {
+      angle += 180;
+    }
+
+    return new TextSymbol({
+      text: `${length} ft        ${azimuth}\u00B0`,
+      angle: angle,
+      xoffset: offsetX,
+      yoffset: offsetY,
+      color: "#ff000066",
+      haloColor: "white",
+      haloSize: "1px",
+      font: {
+        size: 12,
+        family: "sans-serif",
+        weight: "bold"
+      },
+      horizontalAlignment: "center",
+      verticalAlignment: "middle"
+    });
   }
 }

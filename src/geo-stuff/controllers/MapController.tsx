@@ -18,7 +18,7 @@ import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator.js";
 import {PolygonBuildHandler} from "../handlers/PolygonBuildHandler.tsx";
 import {CompassHandler} from "../handlers/CompassHandler.tsx";
-import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
+import {SelectedSymbolUtils} from "../utils/SelectedSymbolUtils.tsx";
 
 export class MapController {
   public view: MapView | undefined;
@@ -57,7 +57,7 @@ export class MapController {
     this.currentBuilder = undefined;
 
     if (mode === MapModes.TransformRect) {
-      const graphic = this.graphicsLayer.graphics.find(g => g.attributes.modelAttributes.model.modelId === this.currentModel.modelId && g.attributes.modelAttributes.role === ModelRoles.Polygon);
+      const graphic = this.graphicsLayer.graphics.find(g => g.attributes.model.modelId === this.currentModel.modelId && g.attributes.role === ModelRoles.Polygon);
       if (graphic) {
         this.currentBuilder = new RectTransformer(graphic, this.graphicsLayer.graphics);
         this.currentBuilder.activate();
@@ -68,14 +68,14 @@ export class MapController {
   public click(event: ViewClickEvent): void {
     if (this.currentMode === MapModes.None) {
       this.hitTest(event, (ctx: MapController, evx: MouseEventModel, graphic: Graphic) => {
-        if (graphic.attributes.modelAttributes) {
+        if (graphic.attributes.model) {
           ctx.graphicsLayer.remove(graphic);
           ctx.graphicsLayer.add(new Graphic({
             geometry: new Polygon({
               rings: (graphic.geometry as Polygon).rings,
               spatialReference: graphic.geometry!.spatialReference
             }),
-            symbol: FillSymbolUtils.green()
+            symbol: SelectedSymbolUtils.fillSymbol()
           }));
         }
       });

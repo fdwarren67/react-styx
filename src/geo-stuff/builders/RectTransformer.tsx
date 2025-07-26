@@ -2,14 +2,12 @@ import Graphic from '@arcgis/core/Graphic';
 import {Point, Polygon, Polyline} from '@arcgis/core/geometry';
 import {GeometryUtils} from '../utils/GeometryUtils.tsx';
 import Collection from "@arcgis/core/core/Collection";
-import {EditingSymbolUtils} from "../utils/EditingSymbolUtils.tsx";
+import {BuildingSymbolUtils} from "../utils/BuildingSymbolUtils.tsx";
 import {FillSymbolUtils} from "../utils/FillSymbolUtils.tsx";
-import {RectModel} from "../models/RectModel.tsx";
+import {PolygonModel} from "../models/PolygonModel.tsx";
 import Transformation from "@arcgis/core/geometry/operators/support/Transformation";
 import * as transOp from "@arcgis/core/geometry/operators/affineTransformOperator.js";
 import {PointSymbolUtils} from "../utils/PointSymbolUtils.tsx";
-import {ModelAttributes} from "../utils/ModelAttributes.tsx";
-import {GraphicUtils} from "../utils/GraphicUtils.tsx";
 import {Builder} from "./Builder.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
@@ -17,12 +15,12 @@ import {MouseEventModel} from "../models/MouseEventModel.tsx";
 export class RectTransformer implements Builder {
   readonly builderType = BuilderTypes.RectTransformer;
   graphics: Collection<Graphic>;
-  attr: ModelAttributes;
-  model: RectModel;
+  attr: any;
+  model: PolygonModel;
   rectGraphic: Graphic;
   vertexGraphics: Graphic[] = [];
   edgeGraphics: Graphic[] = [];
-  finishCallback: ((model: RectModel) => void) | undefined;
+  finishCallback: ((model: PolygonModel) => void) | undefined;
   anchorIndex = 0;
   rotatorIndex = -1;
   shifting = false;
@@ -30,25 +28,29 @@ export class RectTransformer implements Builder {
 
   constructor(graphic: Graphic, graphics: Collection<Graphic>) {
     this.graphics = graphics;
-    this.attr = GraphicUtils.getModelAttributes(graphic);
-    this.model = this.attr.model as RectModel;
+    this.attr = graphic.attributes;
+    this.model = this.attr.model as PolygonModel;
     this.rectGraphic = graphic;
-    this.rectGraphic.symbol = EditingSymbolUtils.fillSymbol();
+    this.rectGraphic.symbol = BuildingSymbolUtils.fillSymbol();
 
     this.model.vertices.forEach((pt, idx) => {
       this.vertexGraphics.push(new Graphic({
         geometry: pt,
         symbol: idx === this.anchorIndex ? PointSymbolUtils.redCircle(10) : PointSymbolUtils.redSquare(6),
         attributes: {
-          modelAttributes: new ModelAttributes(this.model, ModelRoles.Vertex, idx)
+          model: this.model,
+          role: ModelRoles.Vertex,
+          index: idx
         }
       }));
 
       this.edgeGraphics.push(new Graphic({
         geometry: this.createEdgeGeometry(pt, this.model.vertices[(idx + 1) % 4]),
-        symbol: EditingSymbolUtils.thickLineSymbol(),
+        symbol: BuildingSymbolUtils.thickLineSymbol(),
         attributes: {
-          modelAttributes: new ModelAttributes(this.model, ModelRoles.Edge, idx)
+          model: this.model,
+          role: ModelRoles.Edge,
+          index: idx
         }
       }))
     })
@@ -159,7 +161,7 @@ export class RectTransformer implements Builder {
 
   activate(): void {
     this.graphics.addMany([...this.vertexGraphics, ...this.edgeGraphics]);
-    this.rectGraphic.symbol = EditingSymbolUtils.fillSymbol();
+    this.rectGraphic.symbol = BuildingSymbolUtils.fillSymbol();
   }
 
   deactivate(): void {
@@ -173,7 +175,7 @@ export class RectTransformer implements Builder {
   destroy(): void {
   }
 
-  onFinish(finishCallback: (model: RectModel) => void): void {
+  onFinish(finishCallback: (model: PolygonModel) => void): void {
     this.finishCallback = finishCallback
   }
 

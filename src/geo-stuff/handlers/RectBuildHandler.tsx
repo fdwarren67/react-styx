@@ -3,7 +3,7 @@ import {RectBuilder} from "../builders/RectBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
 import {BuilderTypes} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
-import {RectModel} from "../models/RectModel.tsx";
+import {PolygonModel} from "../models/PolygonModel.tsx";
 
 export class RectBuildHandler {
   public static click(ctx: MapController, evx: MouseEventModel): void {
@@ -26,7 +26,7 @@ export class RectBuildHandler {
         ctx.currentBuilder = RectBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics);
         ctx.currentModel = ctx.currentBuilder.model;
         ctx.currentBuilder.onFinish(() => {
-          ctx.compassHandler.updateFromVertices((ctx.currentModel as RectModel).vertices);
+          ctx.compassHandler.updateFromVertices((ctx.currentModel as PolygonModel).vertices);
           ctx.currentBuilder = undefined;
         });
         ctx.currentBuilder.activate();

@@ -1,7 +1,6 @@
 import {useRef, useEffect, useContext, useState, useImperativeHandle, forwardRef} from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {GraphicUtils} from "../geo-stuff/utils/GraphicUtils.tsx";
 import {MapContext} from "../common-stuff/MapContext.tsx";
 import {GeometryUtils} from "../geo-stuff/utils/GeometryUtils.tsx";
 import {Polygon, Polyline} from "@arcgis/core/geometry";
@@ -47,10 +46,10 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
 
   // graphics layer
   useEffect(() => {
-    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => GraphicUtils.getModelAttributes(g).role === ModelRoles.Polygon).toArray());
-    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => GraphicUtils.getModelAttributes(g).role === ModelRoles.Line).toArray());
+    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Polygon).toArray());
+    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Line).toArray());
 
-    const bounds = ctx.graphicsLayer.graphics.filter(g => GraphicUtils.getModelAttributes(g).role === ModelRoles.Boundary);
+    const bounds = ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Boundary);
     if (bounds.length > 0 && bounds.getItemAt(0)) {
       setBoundaryRing((bounds.getItemAt(0)!.geometry as Polygon).rings[0]);
     }
@@ -93,7 +92,7 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
       const walls = MeshUtils.createPolygonWalls(ring, outerRingCenter, scalingFactor);
 
       walls.forEach(w => {
-          w.name = rect.attributes.modelAttributes.model.id;
+          w.name = rect.attributes.model.id;
           scene.current!.add(w)
 
           blockMeshes.current.push(w);
@@ -118,7 +117,7 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
     wellboreGraphics.forEach((line, idx) => {
       const path = (line.geometry as Polyline).paths[0];
       const pipe = MeshUtils.createLinePipe(path, outerRingCenter, scalingFactor);
-      pipe.name = line.attributes.modelAttributes.model.id;
+      pipe.name = line.attributes.model.id;
 
       wellboreMeshes.current.push(pipe);
       scene.current!.add(pipe);

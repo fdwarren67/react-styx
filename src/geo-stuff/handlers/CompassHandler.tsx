@@ -4,7 +4,6 @@ import Circle from "@arcgis/core/geometry/Circle";
 import {SimpleLineSymbol} from "@arcgis/core/symbols";
 import {GeometryUtils} from "../utils/GeometryUtils.tsx";
 import {PointSymbolUtils} from "../utils/PointSymbolUtils.tsx";
-import {ModelAttributes} from "../utils/ModelAttributes.tsx";
 import {ModelRoles} from "../utils/Constants.tsx";
 import {EmptyModel} from "../models/EmptyModel.tsx";
 
@@ -82,7 +81,9 @@ export class CompassHandler {
         style: "long-dash"
       }),
       attributes: {
-        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassCircle, 0)
+        model: new EmptyModel(),
+        role: ModelRoles.CompassCircle,
+        index: 0
       }
     })
   }
@@ -96,7 +97,9 @@ export class CompassHandler {
           style: "long-dash"
         }),
         attributes: {
-          modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassAzimuth, 0)
+          model: new EmptyModel(),
+          role: ModelRoles.CompassAzimuth,
+          index: 0
         }
       });
   }
@@ -110,7 +113,9 @@ export class CompassHandler {
         style: "short-dash"
       }),
       attributes: {
-        modelAttributes: new ModelAttributes(new EmptyModel(), ModelRoles.CompassNormal, 0)
+        model: new EmptyModel(),
+        role: ModelRoles.CompassNormal,
+        index: 0
       }
     });
   }

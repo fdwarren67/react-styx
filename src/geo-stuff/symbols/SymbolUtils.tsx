@@ -4,7 +4,7 @@ import {BlockSymbolUtils} from "./BlockSymbolUtils.tsx";
 import {StickSymbolUtils} from "./StickSymbolUtils.tsx";
 
 export class SymbolUtils {
-  public static building(role: ModelRoles): Symbol {
+  static building(role: ModelRoles): Symbol {
     switch (role) {
       case ModelRoles.Block:
         return BlockSymbolUtils.building();
@@ -15,7 +15,7 @@ export class SymbolUtils {
     return StickSymbolUtils.building();
   }
 
-  public static normal(role: ModelRoles): Symbol {
+  static normal(role: ModelRoles): Symbol {
     switch (role) {
       case ModelRoles.Block:
         return BlockSymbolUtils.normal();
@@ -26,7 +26,7 @@ export class SymbolUtils {
     return StickSymbolUtils.normal();
   }
 
-  public static selected(role: ModelRoles): Symbol {
+  static selected(role: ModelRoles): Symbol {
     switch (role) {
       case ModelRoles.Block:
         return BlockSymbolUtils.selected();

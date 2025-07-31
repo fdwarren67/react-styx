@@ -2,13 +2,13 @@ import {RectTransformer} from "../builders/RectTransformer.tsx";
 import {MapController} from "../controllers/MapController.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import Graphic from "@arcgis/core/Graphic";
-import {ModelRoles} from "../utils/Constants.tsx";
-import {PolygonModel} from "../models/PolygonModel.tsx";
+import {GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
+import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
-export class RectTransformHandler {
-  public static click(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
-    if (graphic.attributes.role === ModelRoles.Block) {
-      if (ctx.currentModel.modelId !== graphic.attributes.model.modelId) {
+export class PolygonTransformHandler {
+  static click(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
+    if (graphic.attributes.model.role === ModelRoles.Block) {
+      if (ctx.currentModel.id !== graphic.attributes.model.id) {
         if (ctx.currentBuilder && ctx.currentBuilder as RectTransformer) {
           ctx.currentBuilder.deactivate();
         }
@@ -20,19 +20,19 @@ export class RectTransformHandler {
     }
   }
 
-  public static dblclick(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
+  static dblclick(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
     if (graphic.attributes) {
-      if (graphic.attributes.role === ModelRoles.Vertex) {
-        (ctx.currentBuilder as RectTransformer).setAnchorIndex(graphic.attributes.index);
+      if (graphic.attributes.role === GraphicRoles.Vertex) {
+        (ctx.currentBuilder as RectTransformer).setAnchorIndex(graphic.attributes.model.index);
       }
     }
   }
 
-  public static drag(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
+  static drag(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
     const transformer = ctx.currentBuilder as RectTransformer;
     if (evx.action === 'start') {
       const attr = graphic.attributes;
-      if (attr.role === ModelRoles.Vertex) {
+      if (attr.role === GraphicRoles.Vertex) {
         if (attr.index !== transformer.anchorIndex) {
           transformer.setRotatorIndex(attr.index);
         }
@@ -40,7 +40,7 @@ export class RectTransformHandler {
           transformer.shifting = true;
         }
       }
-      else if (attr.role === ModelRoles.Edge) {
+      else if (attr.role === GraphicRoles.Edge) {
         transformer.resizerIndex = attr.index;
       }
     }
@@ -58,10 +58,10 @@ export class RectTransformHandler {
       }
     }
 
-    ctx.compassHandler.updateFromVertices((ctx.currentBuilder!.model as PolygonModel).vertices);
+    ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): boolean {
+  static move(ctx: MapController, evx: MouseEventModel): boolean {
     document.body.style.cursor = 'default';
 
     return false;

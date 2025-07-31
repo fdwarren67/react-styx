@@ -7,7 +7,7 @@ import {ModelRoles} from "../utils/Constants.tsx";
 import {AreaSymbolUtils} from "../symbols/AreaSymbolUtils.tsx";
 
 export class GeoTest {
-  public static test(ctx: MapController) {
+  static test(ctx: MapController) {
     const center = projectOperator.execute(ctx.view!.center, ctx.statePlane!) as Point;
     const diff = 8000 / 2;
 
@@ -25,15 +25,13 @@ export class GeoTest {
       x: r[0],
       y: r[1],
       spatialReference: ctx.statePlane
-    })));
+    })), ModelRoles.WorkingArea);
 
     ctx.graphicsLayer.add(new Graphic({
       geometry: polygon,
       symbol: AreaSymbolUtils.normal(),
       attributes: {
-        model: model,
-        role: ModelRoles.Boundary,
-        index: 0
+        model: model
       }
     }));
 

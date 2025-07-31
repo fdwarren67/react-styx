@@ -5,12 +5,13 @@ import Collection from "@arcgis/core/core/Collection";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
-import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
+import {BuilderTypes, GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
+import {MapController} from "../controllers/MapController.tsx";
 
 export class PolygonBuilder implements Builder {
   readonly builderType = BuilderTypes.PolygonBuilder;
@@ -21,8 +22,8 @@ export class PolygonBuilder implements Builder {
   labelGraphics: Graphic[] = [];
   finishCallback: ((model: PolygonModel) => void) | undefined;
 
-  constructor(vertices: Point[], graphics: Collection<Graphic>) {
-    this.model = new PolygonModel(vertices);
+  constructor(model: PolygonModel, graphics: Collection<Graphic>) {
+    this.model = model;
     this.graphics = graphics;
     this.fillSymbol = BlockSymbolUtils.building();
 
@@ -34,19 +35,19 @@ export class PolygonBuilder implements Builder {
       symbol: this.fillSymbol,
       attributes: {
         model: this.model,
-        role: ModelRoles.Block,
+        role: model.role,
         index: 0
       }
     });
 
-    for (let i = 0; i < vertices.length - 1; i++) {
-      this.pushLabelGraphic(vertices[i], vertices[i + 1], i);
+    for (let i = 0; i < model.vertices.length - 1; i++) {
+      this.pushLabelGraphic(model.vertices[i], model.vertices[i + 1], i);
     }
 
     graphics.addMany([...this.labelGraphics, this.polygonGraphic]);
   }
 
-  public static fromBasePoints(model: Model, graphics: Collection<Graphic>): PolygonBuilder {
+  static fromBasePoints(model: Model, graphics: Collection<Graphic>, role: ModelRoles): PolygonBuilder {
     const lineModel = model as LineModel;
 
     const vertices = [
@@ -55,11 +56,11 @@ export class PolygonBuilder implements Builder {
       GeometryUtils.offsetPoint(lineModel.endPoint, 5, 0)
     ];
 
-    return new PolygonBuilder(vertices, graphics);
+    return new PolygonBuilder(new PolygonModel(vertices, role), graphics);
   }
 
   move(evx: MouseEventModel): void {
-    this.model.vertices[this.model.vertices.length - 1] = evx.projectedPoint;
+    this.model.updateVertex(this.model.vertices.length - 1, evx.projectedPoint);
 
     this.polygonGraphic.geometry = new Polygon({
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
@@ -77,7 +78,7 @@ export class PolygonBuilder implements Builder {
   click(evx: MouseEventModel): void {
     this.move(evx);
 
-    this.model.vertices.push(GeometryUtils.offsetPoint(evx.projectedPoint, 5, 0));
+    this.model.addVertex(GeometryUtils.offsetPoint(evx.projectedPoint, 5, 0))
 
     const idx = this.model.vertices.length - 2;
     this.pushLabelGraphic(this.model.vertices[idx], this.model.vertices[idx + 1], idx);
@@ -93,6 +94,7 @@ export class PolygonBuilder implements Builder {
     this.labelGraphics[idx].symbol = this.calcLabelSymbol(this.model.vertices[idx], this.model.vertices[0]);
 
     if (this.finishCallback) {
+      MapController.instance.selectGraphic(this.polygonGraphic);
       this.finishCallback(this.model);
     }
   }
@@ -105,7 +107,7 @@ export class PolygonBuilder implements Builder {
   }
 
   destroy(): void {
-    this.graphics.remove(this.polygonGraphic);
+    this.graphics.removeMany([...this.labelGraphics, this.polygonGraphic]);
   }
 
   onFinish(finishCallback: (model: PolygonModel) => void): void {
@@ -118,7 +120,7 @@ export class PolygonBuilder implements Builder {
       symbol: this.calcLabelSymbol(pt1, pt2),
       attributes: {
         model: this.model,
-        role: ModelRoles.LineLabel,
+        role: GraphicRoles.LineLabel,
         index: idx
       }
     }));

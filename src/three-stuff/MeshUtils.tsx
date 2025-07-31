@@ -3,7 +3,7 @@ import {GeometryUtils} from "../geo-stuff/utils/GeometryUtils.tsx";
 import {CylinderGeometry, Mesh, MeshBasicMaterial, PlaneGeometry} from "three";
 
 export class MeshUtils {
-  public static createPolygonWalls(ring: number[][], referenceCenter: number[], scalingFactor: number): Mesh<PlaneGeometry, MeshBasicMaterial>[] {
+  static createPolygonWalls(ring: number[][], referenceCenter: number[], scalingFactor: number): Mesh<PlaneGeometry, MeshBasicMaterial>[] {
     return ring.map((edge: number[], idx: number, rects: number[][]) => {
       const jdx = (idx + 1) % rects.length;
       const center = [(edge[0] + rects[jdx][0]) / 2, (edge[1] + rects[jdx][1]) / 2];
@@ -11,7 +11,6 @@ export class MeshUtils {
       const rads = GeometryUtils.radians2(edge, rects[jdx]);
 
       const geometry = new THREE.PlaneGeometry(length, 100, length, 100);
-
       geometry.rotateY(rads);
 
       const tx = (center[0] - referenceCenter[0]) / scalingFactor;
@@ -31,7 +30,7 @@ export class MeshUtils {
     });
   }
 
-  public static createLinePipe(path: number[][], referenceCenter: number[], scalingFactor: number): Mesh<CylinderGeometry, MeshBasicMaterial> {
+  static createLinePipe(path: number[][], referenceCenter: number[], scalingFactor: number): Mesh<CylinderGeometry, MeshBasicMaterial> {
     const center = [(path[0][0] + path[1][0]) / 2, (path[0][1] + path[1][1]) / 2];
     const length = GeometryUtils.distance(path[0], path[1]) / scalingFactor;
     const rads = GeometryUtils.radians2(path[0], path[1]);
@@ -50,7 +49,7 @@ export class MeshUtils {
     return new THREE.Mesh(geometry, material);
   }
 
-  public static loadHeightMap(ht: number, color: number, callback: (mesh: Mesh<PlaneGeometry,MeshBasicMaterial>) => void): void {
+  static loadHeightMap(ht: number, color: number, callback: (mesh: Mesh<PlaneGeometry,MeshBasicMaterial>) => void): void {
     const loader = new THREE.TextureLoader();
     loader.load(import.meta.env.BASE_URL + 'heightmap.png', (texture) => {
       const img = texture.image as HTMLImageElement;

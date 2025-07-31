@@ -1,4 +1,7 @@
+import {ModelRoles} from "../utils/Constants.tsx";
+
 export interface Model {
-  modelId: number;
-  modelType: string;
+  id: number;
+  type: string;
+  role: ModelRoles;
 }

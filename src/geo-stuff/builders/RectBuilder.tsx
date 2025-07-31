@@ -6,11 +6,12 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {PolygonModel} from "../models/PolygonModel.tsx";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
-import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
+import {BuilderTypes, GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
 import {Model} from "../models/Model.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
+import {MapController} from "../controllers/MapController.tsx";
 
 export class RectBuilder implements Builder {
   readonly builderType = BuilderTypes.RectBuilder;
@@ -22,8 +23,8 @@ export class RectBuilder implements Builder {
   symbol: SimpleFillSymbol;
   finishCallback: ((model: PolygonModel) => void) | undefined;
 
-  constructor(vertices: Point[], graphics: Collection<Graphic>) {
-    this.model = new PolygonModel(vertices);
+  constructor(model: PolygonModel, graphics: Collection<Graphic>) {
+    this.model = model;
     this.graphics = graphics;
     this.symbol = BlockSymbolUtils.building();
 
@@ -35,27 +36,27 @@ export class RectBuilder implements Builder {
       symbol: this.symbol,
       attributes: {
         model: this.model,
-        role: ModelRoles.Block,
+        role: GraphicRoles.Polygon,
         index: 0
       }
     });
 
     this.anchorLabelGraphic = new Graphic({
-      geometry: GeometryUtils.centerPoint([vertices[0], vertices[1]]),
-      symbol: this.calcLabelSymbol(vertices[0], vertices[1]),
+      geometry: GeometryUtils.centerPoint([model.vertices[0], model.vertices[1]]),
+      symbol: this.calcLabelSymbol(model.vertices[0], model.vertices[1]),
       attributes: {
         model: this.model,
-        role: ModelRoles.LineLabel,
+        role: GraphicRoles.LineLabel,
         index: 0
       }
     });
 
     this.sideLabelGraphic = new Graphic({
-      geometry: GeometryUtils.centerPoint([vertices[1], vertices[2]]),
-      symbol: this.calcLabelSymbol(vertices[1], vertices[2]),
+      geometry: GeometryUtils.centerPoint([model.vertices[1], model.vertices[2]]),
+      symbol: this.calcLabelSymbol(model.vertices[1], model.vertices[2]),
       attributes: {
         model: this.model,
-        role: ModelRoles.LineLabel,
+        role: GraphicRoles.LineLabel,
         index: 0
       }
     });
@@ -63,7 +64,7 @@ export class RectBuilder implements Builder {
     graphics.addMany([this.rectGraphic, this.anchorLabelGraphic, this.sideLabelGraphic]);
   }
 
-  public static fromBasePoints(model: Model, graphics: Collection<Graphic>) {
+  static fromBasePoints(model: Model, graphics: Collection<Graphic>, role: ModelRoles): RectBuilder {
     const lineModel = model as LineModel;
 
     const vertices = [
@@ -73,7 +74,7 @@ export class RectBuilder implements Builder {
       GeometryUtils.offsetPoint(lineModel.anchorPoint, 5, 0)
     ];
 
-    return new RectBuilder(vertices, graphics);
+    return new RectBuilder(new PolygonModel(vertices, role), graphics);
   }
 
   move(evx: MouseEventModel): void {
@@ -90,17 +91,17 @@ export class RectBuilder implements Builder {
     const thirdRadians = diff >= Math.PI ? baseRadians + Math.PI / 2 : baseRadians - Math.PI / 2;
     const vector = this.model.vertices[1].distance(point) * (diff < 0 ? 1 : -1);
 
-    this.model.vertices[2] = new Point({
+    this.model.updateVertex(2, new Point({
       x: this.model.vertices[1].x - Math.cos(thirdRadians) * vector,
       y: this.model.vertices[1].y - Math.sin(thirdRadians) * vector,
       spatialReference: this.model.vertices[0].spatialReference
-    });
+    }));
 
-    this.model.vertices[3] = new Point({
+    this.model.updateVertex(3, new Point({
       x: this.model.vertices[0].x - Math.cos(thirdRadians) * vector,
       y: this.model.vertices[0].y - Math.sin(thirdRadians) * vector,
       spatialReference: this.model.vertices[0].spatialReference
-    });
+    }));
 
     this.rectGraphic.geometry = new Polygon({
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
@@ -117,6 +118,7 @@ export class RectBuilder implements Builder {
 
     if (this.finishCallback) {
       this.rectGraphic.symbol = BlockSymbolUtils.normal();
+      MapController.instance.selectGraphic(this.rectGraphic);
       this.finishCallback(this.model);
     }
   }
@@ -133,7 +135,7 @@ export class RectBuilder implements Builder {
   }
 
   destroy(): void {
-    this.graphics.remove(this.rectGraphic);
+    this.graphics.removeMany([this.rectGraphic, this.anchorLabelGraphic, this.sideLabelGraphic]);
   }
 
   onFinish(finishCallback: (model: PolygonModel) => void): void {

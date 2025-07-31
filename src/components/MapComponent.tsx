@@ -60,7 +60,7 @@ const MapComponent = forwardRef<MapHandle>((props, ref) => {
       container: mapRef.current,
       map: map,
       center:  [-102.55, 31.02],
-      zoom: 12
+      zoom: 14
     });
     ctx.view.ui.remove("zoom");
     ctx.view.ui.remove("attribution");
@@ -102,8 +102,12 @@ const MapComponent = forwardRef<MapHandle>((props, ref) => {
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
-        ctx.escape();
+        ctx.clearCurrent();
       }
+
+      // if (event.key === 'Delete') {
+      //   ctx.deleteCurrentModel();
+      // }
     });
 
     GeoTest.test(ctx)
@@ -131,71 +135,6 @@ const MapComponent = forwardRef<MapHandle>((props, ref) => {
   return (
     <div style={{height: "100%", width: "100%"}}>
       <div className="mapDiv" ref={mapRef} style={{display: 'flex', flex: 1, height: '100%', width: "100%"}}></div>
-
-      {/*<div id='side-bar' style={{*/}
-      {/*  position: 'absolute',*/}
-      {/*  top: '0px',*/}
-      {/*  height: '100%',*/}
-      {/*  width: '50px',*/}
-      {/*  padding: '3px',*/}
-      {/*  backgroundColor: 'white',*/}
-      {/*  borderRight: '1px solid #ccc'*/}
-      {/*}}>*/}
-      {/*  <button className="btn btn-outline-secondary" type="button" onClick={() => setSidebarOpen(!sidebarOpen)}>*/}
-      {/*    <i className={"bi " + (sidebarOpen ? "bi-chevron-double-left" : "bi-chevron-double-right")}></i>*/}
-      {/*  </button>*/}
-      {/*</div>*/}
-      {/*<div style={{*/}
-      {/*  position: 'absolute',*/}
-      {/*  top: '0px',*/}
-      {/*  left: '50px',*/}
-      {/*  height: '100%',*/}
-      {/*  width: sidebarOpen ? '250px' : '0',*/}
-      {/*  overflow: 'hidden',*/}
-      {/*  transition: 'width 0.3s ease',*/}
-      {/*  backgroundColor: 'white',*/}
-      {/*  borderRight: '1px solid #ccc'*/}
-      {/*}}>*/}
-      {/*  <ul className="nav flex-column">*/}
-      {/*    <li className="nav-item">*/}
-      {/*      <a className="nav-link" href="#">Item 1</a>*/}
-      {/*    </li>*/}
-      {/*    <li className="nav-item">*/}
-      {/*      <a className="nav-link" href="#">Item 2</a>*/}
-      {/*    </li>*/}
-      {/*  </ul>*/}
-      {/*</div>*/}
-
-      {/*<div id='info-bar' style={{*/}
-      {/*  position: 'absolute',*/}
-      {/*  width: '100%',*/}
-      {/*  height: '40px',*/}
-      {/*  bottom: '0px',*/}
-      {/*  backgroundColor: 'white',*/}
-      {/*  borderTop: '1px solid #ccc'*/}
-      {/*}}></div>*/}
-      {/*<div style={{position: "absolute", bottom: "7px", left: "345px", width: '250px'}}>{wgs84Location}</div>*/}
-      {/*<div style={{position: "absolute", bottom: "7px", left: "600px", width: '350px'}}>{statePlaneLocation}</div>*/}
-
-      {/*  <CalciteShellPanel slot="panel-start" width={'s'} displayMode={'dock'} resizable={true}>*/}
-      {/*    <CalcitePanel heading="Tools" id="menu-panel">*/}
-      {/*      <CalciteMenu layout="vertical" label="Tools">*/}
-      {/*        <CalciteMenuItem icon-start="add-in-new" text="New">*/}
-      {/*          <CalciteMenuItem icon-start="line-straight" slot="submenu-item" text="Wellbore"*/}
-      {/*                           onClick={() => setCurrentMode(MapModes.DrawLine)}></CalciteMenuItem>*/}
-      {/*          <CalciteMenuItem icon-start="polygon" slot="submenu-item" text="Block"*/}
-      {/*                           onClick={() => setCurrentMode(MapModes.DrawPolygon)}></CalciteMenuItem>*/}
-      {/*          <CalciteMenuItem icon-start="rectangle-plus" slot="submenu-item" text="Rectangular"*/}
-      {/*                           onClick={() => setCurrentMode(MapModes.DrawRect)}></CalciteMenuItem>*/}
-      {/*        </CalciteMenuItem>*/}
-      {/*        <CalciteMenuItem icon-start="pencil" text="Edit">*/}
-      {/*          <CalciteMenuItem icon-start="rotate" slot="submenu-item" text="Transform Block"*/}
-      {/*                           onClick={() => setCurrentMode(MapModes.TransformRect)}></CalciteMenuItem>*/}
-      {/*        </CalciteMenuItem>*/}
-      {/*        <CalciteMenuItem icon-start="cube" text="Explore 3-D" onClick={() => navigate('/three')}></CalciteMenuItem>*/}
-      {/*      </CalciteMenu>*/}
-      {/*    </CalcitePanel>*/}
-      {/*  </CalciteShellPanel>*/}
     </div>
   );
 });

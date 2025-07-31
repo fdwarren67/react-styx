@@ -1,13 +1,14 @@
-import {useRef, useEffect, useContext, useState, useImperativeHandle, forwardRef} from 'react';
+import {forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {Mesh} from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {MapContext} from "../common-stuff/MapContext.tsx";
 import {GeometryUtils} from "../geo-stuff/utils/GeometryUtils.tsx";
 import {Polygon, Polyline} from "@arcgis/core/geometry";
 import {ModelRoles} from "../geo-stuff/utils/Constants.tsx";
 import {MeshUtils} from "../three-stuff/MeshUtils.tsx";
 import Graphic from "@arcgis/core/Graphic";
-import {Mesh} from "three";
+import {GraphicsUtils} from "../geo-stuff/utils/GraphicsUtils.tsx";
 
 export interface ThreeHandle {
   resize: () => void;
@@ -46,10 +47,10 @@ const ThreeComponent = forwardRef<ThreeHandle>((props, ref) => {
 
   // graphics layer
   useEffect(() => {
-    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Block && g.geometry!.type === 'polygon').toArray());
-    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Stick).toArray());
+    setBlockGraphics(ctx.graphicsLayer.graphics.filter(g => GraphicsUtils.modelRoleEquals(g, ModelRoles.Block) && g.geometry!.type === 'polygon').toArray());
+    setWellboreGraphics(ctx.graphicsLayer.graphics.filter(g => GraphicsUtils.modelRoleEquals(g, ModelRoles.Stick) && g.geometry!.type === 'polyline').toArray());
 
-    const bounds = ctx.graphicsLayer.graphics.filter(g => g.attributes && g.attributes.role === ModelRoles.Boundary);
+    const bounds = ctx.graphicsLayer.graphics.filter(g => GraphicsUtils.modelRoleEquals(g, ModelRoles.WorkingArea));
     if (bounds.length > 0 && bounds.getItemAt(0)) {
       setBoundaryRing((bounds.getItemAt(0)!.geometry as Polygon).rings[0]);
     }

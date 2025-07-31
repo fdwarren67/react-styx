@@ -3,7 +3,7 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {SimpleLineSymbol} from "@arcgis/core/symbols";
 
 export class AreaSymbolUtils {
-  public static building(): SimpleFillSymbol {
+  static building(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#00aa0009'),
       outline: new SimpleLineSymbol({
@@ -14,7 +14,7 @@ export class AreaSymbolUtils {
     });
   }
 
-  public static normal(): SimpleFillSymbol {
+  static normal(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#00aa0000'),
       outline: new SimpleLineSymbol({
@@ -25,7 +25,7 @@ export class AreaSymbolUtils {
     });
   }
 
-  public static selected(): SimpleFillSymbol {
+  static selected(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#00aa0009'),
       outline: new SimpleLineSymbol({

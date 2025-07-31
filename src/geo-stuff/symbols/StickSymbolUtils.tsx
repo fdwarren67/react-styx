@@ -2,7 +2,7 @@ import {SimpleLineSymbol} from '@arcgis/core/symbols';
 import Color from "@arcgis/core/Color";
 
 export class StickSymbolUtils {
-  public static building(): SimpleLineSymbol {
+  static building(): SimpleLineSymbol {
     return new SimpleLineSymbol({
       color: new Color('#00000066'),
       width: "2px",
@@ -10,7 +10,7 @@ export class StickSymbolUtils {
     });
   }
 
-  public static normal(): SimpleLineSymbol {
+  static normal(): SimpleLineSymbol {
     return new SimpleLineSymbol({
       color: new Color('#00000066'),
       width: "2px",
@@ -18,7 +18,7 @@ export class StickSymbolUtils {
     });
   }
 
-  public static selected(): SimpleLineSymbol {
+  static selected(): SimpleLineSymbol {
     return new SimpleLineSymbol({
       color: new Color('#000000ff'),
       width: "2px",

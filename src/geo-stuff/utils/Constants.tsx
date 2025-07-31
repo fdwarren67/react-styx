@@ -2,30 +2,35 @@ export enum ModelRoles {
   None,
   Stick,
   Block,
+  WorkingArea
+}
+
+export enum GraphicRoles {
+  Polygon,
   AnchorPoint,
   EndPoint,
   Vertex,
   Edge,
-  Boundary,
   CompassCircle,
   CompassAzimuth,
   CompassNormal,
+  CompassCenterArrow,
   LineLabel
 }
 
 export class ModelTypes {
-  public static readonly Empty = 'empty';
-  public static readonly Line = 'line';
-  public static readonly Rect = 'rect';
-  public static readonly Polygon = 'polygon';
+  static readonly Empty = 'empty';
+  static readonly Line = 'line';
+  static readonly Rect = 'rect';
+  static readonly Polygon = 'polygon';
 }
 
 export class BuilderTypes {
-  public static readonly LineBuilder = 'LineBuilder';
-  public static readonly RectBuilder = 'RectBuilder';
-  public static readonly PolygonBuilder = 'PolygonBuilder';
-  public static readonly RectTransformer = 'RectTransformer';
-  public static readonly RectResizer = 'RectResizer';
+  static readonly LineBuilder = 'LineBuilder';
+  static readonly RectBuilder = 'RectBuilder';
+  static readonly PolygonBuilder = 'PolygonBuilder';
+  static readonly RectTransformer = 'RectTransformer';
+  static readonly RectResizer = 'RectResizer';
 }
 
 export enum MapModes {
@@ -38,5 +43,5 @@ export enum MapModes {
 }
 
 export class Constants {
-  public static readonly graphicsLayerName = 'Frank';
+  static readonly graphicsLayerName = 'Frank';
 }

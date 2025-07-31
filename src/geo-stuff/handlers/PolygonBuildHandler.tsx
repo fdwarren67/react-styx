@@ -3,14 +3,15 @@ import {MapController} from "../controllers/MapController.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {PolygonBuilder} from "../builders/PolygonBuilder.tsx";
+import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class PolygonBuildHandler {
-  public static click(ctx: MapController, evx: MouseEventModel): void {
+  static click(ctx: MapController, evx: MouseEventModel): void {
     if (ctx.currentBuilder) {
       if (ctx.currentBuilder.builderType === BuilderTypes.LineBuilder) {
         ctx.currentBuilder.click(evx);
       }
-      else if (ctx.currentBuilder.builderType === BuilderTypes.PolygonBuilder &&  ctx.currentBuilder.model.modelId === ctx.currentModel.modelId) {
+      else if (ctx.currentBuilder.builderType === BuilderTypes.PolygonBuilder &&  ctx.currentBuilder.model.id === ctx.currentModel.id) {
         ctx.currentBuilder.click(evx);
       }
       else {
@@ -22,7 +23,7 @@ export class PolygonBuildHandler {
       ctx.currentModel = ctx.currentBuilder.model;
       ctx.currentBuilder.onFinish((model) => {
         ctx.currentBuilder?.destroy();
-        ctx.currentBuilder = PolygonBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics);
+        ctx.currentBuilder = PolygonBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics, ctx.getCurrentModelRole());
         ctx.currentModel = ctx.currentBuilder.model;
         ctx.currentBuilder.onFinish(() => {
           ctx.currentBuilder = undefined;
@@ -34,23 +35,16 @@ export class PolygonBuildHandler {
     }
   }
 
-  public static dblclick(ctx: MapController, evx: MouseEventModel): void {
+  static dblclick(ctx: MapController, evx: MouseEventModel): void {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.dblclick(evx);
     }
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): boolean {
+  static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
-
-      const builder = ctx.currentBuilder;
-      if (builder.builderType === BuilderTypes.LineBuilder) {
-        ctx.compassHandler.updateFromVertices([(builder as LineBuilder).model.anchorPoint, (builder as LineBuilder).model.endPoint]);
-      }
-      else if (builder.builderType === BuilderTypes.PolygonBuilder) {
-        ctx.compassHandler.updateFromVertices((builder as PolygonBuilder).model.vertices);
-      }
+      ctx.compassHandler.updateFromModel(ctx.currentBuilder.model as AzimuthModel);
     }
 
     return ctx.currentBuilder !== undefined;

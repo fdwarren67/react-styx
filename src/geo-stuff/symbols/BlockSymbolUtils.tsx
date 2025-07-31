@@ -3,7 +3,7 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {SimpleLineSymbol} from "@arcgis/core/symbols";
 
 export class BlockSymbolUtils {
-  public static building(): SimpleFillSymbol {
+  static building(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#ff000022'),
       outline: new SimpleLineSymbol({
@@ -14,7 +14,7 @@ export class BlockSymbolUtils {
     });
   }
 
-  public static normal(): SimpleFillSymbol {
+  static normal(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#ff000022'),
       outline: new SimpleLineSymbol({
@@ -25,21 +25,21 @@ export class BlockSymbolUtils {
     });
   }
 
-  public static selected(): SimpleFillSymbol {
+  static selected(): SimpleFillSymbol {
     return new SimpleFillSymbol({
       color: new Color('#ff000022'),
       outline: new SimpleLineSymbol({
-        color: new Color('#ff0000ff'),
-        width: "2px",
+        color: new Color('#ff0000cc'),
+        width: "3px",
         style: "solid"
       })
     });
   }
 
-  public static thickSegment(): SimpleLineSymbol {
+  static thickSegment(): SimpleLineSymbol {
     return new SimpleLineSymbol({
-      color: new Color('#ff000066'),
-      width: "4px",
+      color: new Color('#ff0000cc'),
+      width: "8px",
       style: "solid"
     });
   }

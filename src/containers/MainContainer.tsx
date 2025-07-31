@@ -2,9 +2,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import ThreeComponent, {ThreeHandle} from "../components/ThreeComponent.tsx";
 import PanelContainer, {PanelHandle} from "./PanelContainer.tsx";
 import MapComponent, {MapHandle} from "../components/MapComponent.tsx";
-import {useEffect, useRef} from "react";
-import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import {useEffect, useRef, useState} from "react";
+import {MapModes, ModelRoles} from "../geo-stuff/utils/Constants.tsx";
 import InfoComponent, {InfoHandle} from "../components/InfoComponent.tsx";
+import {MapController} from "../geo-stuff/controllers/MapController.tsx";
+import {Model} from "../geo-stuff/models/Model.tsx";
 
 const MainContainer = () => {
   const mapRef = useRef<MapHandle>(null);
@@ -15,6 +17,16 @@ const MainContainer = () => {
   const threePanelRef = useRef<PanelHandle>(null);
   const infoPanelRef = useRef<PanelHandle>(null);
   const panelOrder = useRef<string[]>(['map', 'three', 'info']);
+
+  const [isBlockSelected, setIsBlockSelected] = useState<boolean>(false);
+  const [isStickSelected, setIsStickSelected] = useState<boolean>(false);
+  const [isMapObjectSelected, setIsMapObjectSelected] = useState<boolean>(false);
+
+  MapController.instance.selectionListeners.push(async (model: Model) => {
+    setIsBlockSelected(model && model.role === ModelRoles.Block);
+    setIsStickSelected(model && model.role === ModelRoles.Stick);
+    setIsMapObjectSelected(model && (model.role === ModelRoles.Block || model.role === ModelRoles.Stick));
+  });
 
   const setBackPanelCode = (backPanelCode: string, origin: string) => {
     if (origin !== "map") {
@@ -83,11 +95,40 @@ const MainContainer = () => {
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">New</a>
                 <ul className="dropdown-menu">
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawStick)}>Wellbore</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockPolygon)}>Block</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockRect)}>Rectangular</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockPolygon)}>Block (Polygon)</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.DrawBlockRect)}>Block (Rectangle)</a></li>
+                  <li><a className={`dropdown-item ${isBlockSelected ? '' : 'disabled'}`} href="#" onClick={() => setMapMode(MapModes.DrawStick)}>Wellbore</a></li>
                 </ul>
               </li>
+
+              {isMapObjectSelected && (
+                <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Selection</a>
+                  <ul className="dropdown-menu">
+                    <li><a className="dropdown-item" href="#" onClick={() => MapController.instance.deleteCurrentModel()}>Delete</a></li>
+                  </ul>
+                </li>
+              )}
+
+              {isBlockSelected && (
+                <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Block</a>
+                  <ul className="dropdown-menu">
+                    <li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.ResizeBlock)}>Resize</a></li>
+                    <li><a className="dropdown-item" href="#" onClick={() => MapController.instance.flipCurrentAzimuth()}>Flip Azimuth</a></li>
+                    {/*<li><a className="dropdown-item" href="#" onClick={() => setMapMode(MapModes.TransformBlock)}>Transform</a></li>*/}
+                  </ul>
+                </li>
+              )}
+
+              {isStickSelected && (
+                <li className="nav-item dropdown">
+                  <a className="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Wellbore</a>
+                  <ul className="dropdown-menu">
+                    <li><a className="dropdown-item" href="#" onClick={() => MapController.instance.flipCurrentAzimuth()}>Flip Azimuth</a></li>
+                  </ul>
+                </li>
+              )}
             </ul>
           </div>
         </div>

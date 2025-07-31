@@ -1,17 +1,17 @@
 import {LineBuilder} from "../builders/LineBuilder.tsx";
 import {RectBuilder} from "../builders/RectBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
-import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
+import {BuilderTypes} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
-import {PolygonModel} from "../models/PolygonModel.tsx";
+import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class RectBuildHandler {
-  public static click(ctx: MapController, evx: MouseEventModel): void {
+  static click(ctx: MapController, evx: MouseEventModel): void {
     if (ctx.currentBuilder) {
       if (ctx.currentBuilder.builderType === BuilderTypes.LineBuilder) {
         ctx.currentBuilder.click(evx);
       }
-      else if (ctx.currentBuilder.builderType === BuilderTypes.RectBuilder &&  ctx.currentBuilder.model.modelId === ctx.currentModel.modelId) {
+      else if (ctx.currentBuilder.builderType === BuilderTypes.RectBuilder &&  ctx.currentBuilder.model.id === ctx.currentModel.id) {
         ctx.currentBuilder.click(evx);
       }
       else {
@@ -19,14 +19,14 @@ export class RectBuildHandler {
       }
     }
     else {
-      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics, ModelRoles.Block);
+      ctx.currentBuilder = new LineBuilder(evx.projectedPoint, ctx.graphicsLayer.graphics, ctx.getCurrentModelRole());
       ctx.currentModel = ctx.currentBuilder.model;
       ctx.currentBuilder.onFinish((model) => {
         ctx.currentBuilder?.destroy();
-        ctx.currentBuilder = RectBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics);
+        ctx.currentBuilder = RectBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics, ctx.getCurrentModelRole());
         ctx.currentModel = ctx.currentBuilder.model;
         ctx.currentBuilder.onFinish(() => {
-          ctx.compassHandler.updateFromVertices((ctx.currentModel as PolygonModel).vertices);
+          ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
           ctx.currentBuilder = undefined;
         });
         ctx.currentBuilder.activate();
@@ -36,17 +36,10 @@ export class RectBuildHandler {
     }
   }
 
-  public static move(ctx: MapController, evx: MouseEventModel): boolean {
+  static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
-
-      const builder = ctx.currentBuilder;
-      if (builder.builderType === BuilderTypes.LineBuilder) {
-        ctx.compassHandler.updateFromVertices([(builder as LineBuilder).model.anchorPoint, (builder as LineBuilder).model.endPoint]);
-      }
-      else if (builder.builderType === BuilderTypes.RectBuilder) {
-        ctx.compassHandler.updateFromVertices((builder as RectBuilder).model.vertices);
-      }
+      ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
     }
 
     return ctx.currentMode !== undefined;

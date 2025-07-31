@@ -1,7 +1,8 @@
+import {ModelRoles, ModelTypes} from "../utils/Constants.tsx";
 import {Model} from "./Model.tsx";
-import {ModelTypes} from "../utils/Constants.tsx";
 
 export class EmptyModel implements Model {
-  modelId = 0;
-  modelType = ModelTypes.Empty
+  id = 0;
+  type = ModelTypes.Empty;
+  role = ModelRoles.None;
 }

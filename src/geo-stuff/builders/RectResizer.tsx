@@ -9,20 +9,15 @@ import {Builder} from "./Builder.tsx";
 import {BuilderTypes, GraphicRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
-import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import Color from "@arcgis/core/Color";
 
-export class RectTransformer implements Builder {
-  readonly builderType = BuilderTypes.RectTransformer;
+export class RectResizer implements Builder {
+  readonly builderType = BuilderTypes.RectResizer;
   graphics: Collection<Graphic>;
   attr: any;
   model: PolygonModel;
   rectGraphic: Graphic;
-  vertexGraphics: Graphic[] = [];
   edgeGraphics: Graphic[] = [];
   finishCallback: ((model: PolygonModel) => void) | undefined;
-  anchorIndex = 0;
-  rotatorIndex = -1;
   shifting = false;
   resizerIndex = -1;
 
@@ -34,16 +29,6 @@ export class RectTransformer implements Builder {
     this.rectGraphic.symbol = BlockSymbolUtils.normal();
 
     this.model.vertices.forEach((pt, idx) => {
-      this.vertexGraphics.push(new Graphic({
-        geometry: pt,
-        symbol: idx === this.anchorIndex ? RectTransformer.redCircle(10) : RectTransformer.redSquare(6),
-        attributes: {
-          model: this.model,
-          role: GraphicRoles.Vertex,
-          index: idx
-        }
-      }));
-
       this.edgeGraphics.push(new Graphic({
         geometry: this.createEdgeGeometry(pt, this.model.vertices[(idx + 1) % 4]),
         symbol: BlockSymbolUtils.thickSegment(),
@@ -100,11 +85,6 @@ export class RectTransformer implements Builder {
 
     [this.resizerIndex, (this.resizerIndex + 1) % 4].forEach(index => {
       this.model.vertices[index] = transOp.execute(this.model.vertices[index], transformer) as Point;
-      this.vertexGraphics[index].geometry = new Point({
-        x: this.model.vertices[index].x,
-        y: this.model.vertices[index].y,
-        spatialReference: point.spatialReference
-      });
     });
 
     this.model.vertices.forEach((pt, idx) => {
@@ -115,38 +95,6 @@ export class RectTransformer implements Builder {
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
       spatialReference: point.spatialReference
     })
-  }
-
-  transform(point: Point): void {
-    let rotateDegrees = 0;
-    let shiftX = 0;
-    let shiftY = 0;
-
-    const transformer = new Transformation();
-    if (this.rotatorIndex > -1) {
-      const radians = GeometryUtils.radians(this.model.vertices[this.rotatorIndex], this.model.vertices[this.anchorIndex]);
-      const newRadians = GeometryUtils.radians(point, this.model.vertices[this.anchorIndex]);
-      const diff = newRadians - radians;
-      rotateDegrees = diff / Math.PI * 180;
-      transformer.rotate(rotateDegrees, this.model.vertices[this.anchorIndex].x, this.model.vertices[this.anchorIndex].y);
-    }
-
-    if (this.shifting) {
-      shiftX = point.x - this.model.vertices[this.anchorIndex].x;
-      shiftY = point.y - this.model.vertices[this.anchorIndex].y;
-      transformer.shift(shiftX, shiftY);
-    }
-
-    if (this.rectGraphic.geometry) {
-      this.rectGraphic.geometry = transOp.execute(this.rectGraphic.geometry, transformer);
-      this.vertexGraphics.forEach((g, idx) => {
-        g.geometry = transOp.execute(g.geometry as Point, transformer);
-        this.model.vertices[idx] = g.geometry as Point;
-      });
-      this.edgeGraphics.forEach((g, idx) => {
-        g.geometry = transOp.execute(g.geometry as Polyline, transformer);
-      });
-    }
   }
 
   click(evx: MouseEventModel): void {
@@ -160,13 +108,13 @@ export class RectTransformer implements Builder {
   }
 
   activate(): void {
-    this.graphics.addMany([...this.vertexGraphics, ...this.edgeGraphics]);
+    this.graphics.addMany(this.edgeGraphics);
     this.rectGraphic.symbol = BlockSymbolUtils.selected();
   }
 
   deactivate(): void {
     this.rectGraphic.symbol = BlockSymbolUtils.normal();
-    this.graphics.removeMany([...this.vertexGraphics, ...this.edgeGraphics]);
+    this.graphics.removeMany(this.edgeGraphics);
     if (this.finishCallback) {
       this.finishCallback(this.model);
     }
@@ -177,40 +125,5 @@ export class RectTransformer implements Builder {
 
   onFinish(finishCallback: (model: PolygonModel) => void): void {
     this.finishCallback = finishCallback
-  }
-
-  setAnchorIndex(anchorIndex: number): void {
-    this.vertexGraphics[this.anchorIndex].symbol = RectTransformer.redCircle(6)
-    this.anchorIndex = anchorIndex;
-    this.vertexGraphics[this.anchorIndex].symbol = RectTransformer.redCircle(10)
-  }
-
-  setRotatorIndex(rotatorIndex: number): void {
-    this.rotatorIndex = rotatorIndex;
-  }
-
-
-  private static redCircle(size: number = 5): SimpleMarkerSymbol {
-    return new SimpleMarkerSymbol({
-      style: 'circle',
-      size: size + 'px',
-      color: new Color('#ff000088'),
-      outline: {
-        color: new Color('#ff000088'),
-        width: 2
-      }
-    });
-  }
-
-  private static redSquare(size: number = 5): SimpleMarkerSymbol {
-    return new SimpleMarkerSymbol({
-      style: 'square',
-      size: size + 'px',
-      color: new Color('#ff000055'),
-      outline: {
-        color: new Color('#ff000055'),
-        width: 2
-      }
-    });
   }
 }

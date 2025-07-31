@@ -1,15 +1,17 @@
 import Graphic from '@arcgis/core/Graphic';
 import {Point, Polyline} from '@arcgis/core/geometry';
 import Collection from "@arcgis/core/core/Collection";
-import {PointSymbolUtils} from "../symbols/PointSymbolUtils.tsx";
 import {LineModel} from "../models/LineModel.tsx";
 import {Builder} from "./Builder.tsx";
-import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
+import {BuilderTypes, GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {GeometryUtils} from "../utils/GeometryUtils.tsx";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 import {StickSymbolUtils} from "../symbols/StickSymbolUtils.tsx";
+import {MapController} from "../controllers/MapController.tsx";
+import {AnchorPointSymbolUtils} from "../symbols/AnchorPointSymbolUtils.tsx";
+import {EndPointSymbolUtils} from "../symbols/EndPointSymbolUtils.tsx";
 
 export class LineBuilder implements Builder {
   readonly builderType = BuilderTypes.LineBuilder;
@@ -22,7 +24,7 @@ export class LineBuilder implements Builder {
   finishCallback: ((model: LineModel) => void) | undefined;
 
   constructor(anchorPoint: Point, graphics: Collection<Graphic>, modelRole: ModelRoles) {
-    this.model = new LineModel(anchorPoint);
+    this.model = new LineModel(anchorPoint, modelRole);
     this.graphics = graphics;
 
     this.lineGraphic = new Graphic({
@@ -33,28 +35,25 @@ export class LineBuilder implements Builder {
       symbol: modelRole === ModelRoles.Block ? BlockSymbolUtils.building() : StickSymbolUtils.building(),
       attributes: {
         model: this.model,
-        role: modelRole,
         index: 0
       }
     });
 
     this.anchorGraphic = new Graphic({
       geometry: this.model.anchorPoint,
-      symbol: PointSymbolUtils.redX(),
+      symbol: AnchorPointSymbolUtils.building(),
       attributes: {
         model: this.model,
-        role: ModelRoles.AnchorPoint,
-        index: 0
+        role: GraphicRoles.AnchorPoint
       }
     });
 
     this.endPointGraphic = new Graphic({
       geometry: this.model.endPoint,
-      symbol: PointSymbolUtils.redCircle(),
+      symbol: EndPointSymbolUtils.building(),
       attributes: {
         model: this.model,
-        role: ModelRoles.EndPoint,
-        index: 0
+        role: GraphicRoles.EndPoint
       }
     });
 
@@ -63,8 +62,7 @@ export class LineBuilder implements Builder {
       symbol: this.calcLabelSymbol(),
       attributes: {
         model: this.model,
-        role: ModelRoles.LineLabel,
-        index: 0
+        role: GraphicRoles.LineLabel
       }
     });
 
@@ -72,7 +70,7 @@ export class LineBuilder implements Builder {
   }
 
   move(evx: MouseEventModel): void {
-    this.model.endPoint = evx.projectedPoint;
+    this.model.updateVertex(1, evx.projectedPoint);
 
     this.lineGraphic.geometry = new Polyline({
       paths: [[[this.model.anchorPoint.x, this.model.anchorPoint.y], [this.model.endPoint.x, this.model.endPoint.y]]],
@@ -90,7 +88,8 @@ export class LineBuilder implements Builder {
 
     if (this.finishCallback) {
       this.lineGraphic.symbol = StickSymbolUtils.normal();
-      this.endPointGraphic.symbol = PointSymbolUtils.blackCircle();
+      this.endPointGraphic.symbol = EndPointSymbolUtils.normal();
+      MapController.instance.selectGraphic(this.lineGraphic);
       this.finishCallback(this.model);
     }
   }

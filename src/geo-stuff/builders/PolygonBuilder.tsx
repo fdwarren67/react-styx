@@ -12,6 +12,7 @@ import {PolygonModel} from "../models/PolygonModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 import {MapController} from "../controllers/MapController.tsx";
+import {BlockModel} from "../models/BlockModel.tsx";
 
 export class PolygonBuilder implements Builder {
   readonly builderType = BuilderTypes.PolygonBuilder;
@@ -56,7 +57,12 @@ export class PolygonBuilder implements Builder {
       GeometryUtils.offsetPoint(lineModel.endPoint, 5, 0)
     ];
 
-    return new PolygonBuilder(new PolygonModel(vertices, role), graphics);
+    if (role === ModelRoles.Block) {
+      return new PolygonBuilder(new BlockModel(vertices), graphics);
+    }
+    else {
+      return new PolygonBuilder(new PolygonModel(vertices, role), graphics);
+    }
   }
 
   move(evx: MouseEventModel): void {

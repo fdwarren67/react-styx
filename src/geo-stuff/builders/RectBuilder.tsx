@@ -12,6 +12,7 @@ import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import TextSymbol from "@arcgis/core/symbols/TextSymbol";
 import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
 import {MapController} from "../controllers/MapController.tsx";
+import {BlockModel} from "../models/BlockModel.tsx";
 
 export class RectBuilder implements Builder {
   readonly builderType = BuilderTypes.RectBuilder;
@@ -74,7 +75,12 @@ export class RectBuilder implements Builder {
       GeometryUtils.offsetPoint(lineModel.anchorPoint, 5, 0)
     ];
 
-    return new RectBuilder(new PolygonModel(vertices, role), graphics);
+    if (role === ModelRoles.Block) {
+      return new RectBuilder(new BlockModel(vertices), graphics);
+    }
+    else {
+      return new RectBuilder(new PolygonModel(vertices, role), graphics);
+    }
   }
 
   move(evx: MouseEventModel): void {
@@ -88,7 +94,7 @@ export class RectBuilder implements Builder {
       diff -= Math.PI * 2;
     }
 
-    const thirdRadians = diff >= Math.PI ? baseRadians + Math.PI / 2 : baseRadians - Math.PI / 2;
+    const thirdRadians = baseRadians - Math.PI / 2;
     const vector = this.model.vertices[1].distance(point) * (diff < 0 ? 1 : -1);
 
     this.model.updateVertex(2, new Point({
@@ -107,6 +113,9 @@ export class RectBuilder implements Builder {
       rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
       spatialReference: this.model.vertices[0].spatialReference
     });
+
+    this.anchorLabelGraphic.geometry = GeometryUtils.centerPoint([this.model.vertices[0], this.model.vertices[1]]);
+    this.anchorLabelGraphic.symbol = this.calcLabelSymbol(this.model.vertices[0], this.model.vertices[1])
 
     this.sideLabelGraphic.geometry = GeometryUtils.centerPoint([this.model.vertices[1], this.model.vertices[2]]);
     this.sideLabelGraphic.symbol = this.calcLabelSymbol(this.model.vertices[1], this.model.vertices[2])
@@ -146,10 +155,14 @@ export class RectBuilder implements Builder {
     const length = Math.round(GeometryUtils.distance([pt1.x, pt1.y], [pt2.x, pt2.y])).toLocaleString();
     const azimuth = Math.round(GeometryUtils.azimuth(pt1, pt2) * 100) / 100;
 
-    const multi = azimuth / Math.abs(azimuth);
+    const midPoint = GeometryUtils.centerPoint([pt1, pt2]);
+    const polarityX = midPoint.x > this.model.centerPoint.x ? 1 : -1;
+    const polarityY = midPoint.y > this.model.centerPoint.y ? 1 : -1;
+
+    const multiplier = azimuth / Math.abs(azimuth);
     const radians = -GeometryUtils.radians(pt1, pt2);
-    const offsetY = (multi * Math.cos(radians) * 10) + 'px';
-    const offsetX = (multi * Math.sin(radians) * 10) + 'px';
+    const offsetY = (polarityY * multiplier * Math.cos(radians) * 15) + 'px';
+    const offsetX = (polarityX * multiplier * Math.sin(radians) * 15) + 'px';
     let angle = -GeometryUtils.degrees(pt2, pt1)
     if (azimuth > 0) {
       angle += 180;

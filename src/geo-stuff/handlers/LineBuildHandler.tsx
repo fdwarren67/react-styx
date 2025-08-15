@@ -2,7 +2,6 @@ import {LineBuilder} from "../builders/LineBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {ModelRoles} from "../utils/Constants.tsx";
-import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class LineBuildHandler {
   static click(ctx: MapController, evx: MouseEventModel, modelRole: ModelRoles): void {
@@ -24,8 +23,7 @@ export class LineBuildHandler {
     const builder = ctx.currentBuilder as LineBuilder;
     if (builder) {
       builder.move(evx);
-
-      ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel); //updateFromVertices([builder.model.anchorPoint, builder.model.endPoint]);
+      ctx.currentModelUpdated();
     }
 
     return builder !== undefined;

@@ -56,18 +56,16 @@ export class CompassHandler {
   }
 
   static createAzimuthGeometry(centerPoint: Point, azimuth: number): Polyline {
-    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth, 25000);
-    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 180, 25000);
-
-    return new Polyline({
-      paths: [[[a1.x, a1.y], [a2.x, a2.y]]],
-      spatialReference: centerPoint.spatialReference
-    });
+    return CompassHandler.createLineGeometry(centerPoint, azimuth, 25000);
   }
 
   static createNormalGeometry(centerPoint: Point, azimuth: number): Polyline {
-    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth + 90, 15000);
-    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 90, 15000);
+    return CompassHandler.createLineGeometry(centerPoint, azimuth + 90, 15000);
+  }
+
+  static createLineGeometry(centerPoint: Point, azimuth: number, distance: number): Polyline {
+    const a1 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth, distance);
+    const a2 = GeometryUtils.offsetByAzimuth(centerPoint, azimuth - 180, distance);
 
     return new Polyline({
       paths: [[[a1.x, a1.y], [a2.x, a2.y]]],

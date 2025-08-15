@@ -3,7 +3,6 @@ import {MapController} from "../controllers/MapController.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import Graphic from "@arcgis/core/Graphic";
 import {GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
-import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class PolygonTransformHandler {
   static click(ctx: MapController, evx: MouseEventModel, graphic: Graphic): void {
@@ -58,7 +57,7 @@ export class PolygonTransformHandler {
       }
     }
 
-    ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
+    ctx.currentModelUpdated();
   }
 
   static move(ctx: MapController, evx: MouseEventModel): boolean {

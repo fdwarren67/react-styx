@@ -3,7 +3,6 @@ import {MapController} from "../controllers/MapController.tsx";
 import {BuilderTypes, ModelRoles} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
 import {PolygonBuilder} from "../builders/PolygonBuilder.tsx";
-import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class PolygonBuildHandler {
   static click(ctx: MapController, evx: MouseEventModel): void {
@@ -44,7 +43,7 @@ export class PolygonBuildHandler {
   static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
-      ctx.compassHandler.updateFromModel(ctx.currentBuilder.model as AzimuthModel);
+      ctx.currentModelUpdated();
     }
 
     return ctx.currentBuilder !== undefined;

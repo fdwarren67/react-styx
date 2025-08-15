@@ -1,4 +1,4 @@
-import {Geometry, Point, Polygon} from '@arcgis/core/geometry';
+import {Geometry, Point, Polygon, Polyline} from '@arcgis/core/geometry';
 import Transformation from '@arcgis/core/geometry/operators/support/Transformation';
 import * as transOp from "@arcgis/core/geometry/operators/affineTransformOperator.js";
 import {GeometryUnion} from '@arcgis/core/unionTypes';
@@ -43,6 +43,7 @@ export class GeometryUtils {
   static radians(pt1: Point, pt2: Point): number {
     return GeometryUtils.convertPathToRadians([[pt1.x, pt1.y], [pt2.x, pt2.y]]);
   }
+
   static convertPathToRadians(path: number[][]): number {
     const dy = path[1][1] - path[0][1];
     const dx = path[1][0] - path[0][0];
@@ -63,6 +64,61 @@ export class GeometryUtils {
     transform.rotate(degrees, point.x, point.y);
 
     return transOp.execute(geometry, transform);
+  }
+
+  static polylineToPoints(line: Polyline): Point[] {
+    const result: Point[] = [];
+
+    line.paths[0].forEach(p => {
+      result.push(new Point({
+        x: p[0],
+        y: p[1],
+        spatialReference: line.spatialReference
+      }))
+    });
+
+    return result;
+  }
+
+  static spacedPoints(pointA: Point, pointB: Point, count: number): Point[] {
+      const result: Point[] = [];
+      const diffX = pointA.x - pointB.x;
+      const diffY = pointA.y - pointB.y;
+
+      const incX = diffX / (count - 1);
+      const incY = diffY / (count - 1);
+
+      for (let i = 0; i < count; i++) {
+        result.push(new Point({
+          x: pointA.x - incX * i,
+          y: pointA.y - incY * i,
+          spatialReference: pointA.spatialReference
+        }));
+      }
+
+      return result;
+  }
+
+  static verticesToSegments(vertices: Point[]): Polyline[] {
+    const segments: Polyline[] = [];
+
+    for (let i = 0; i < vertices.length; i++) {
+      const curr = vertices[i];
+      const next = vertices[(i + 1) % vertices.length];
+
+      const segment = new Polyline({
+        paths: [[[curr.x, curr.y], [next.x, next.y]]],
+        spatialReference: vertices[0].spatialReference
+      });
+
+      segments.push(segment);
+    }
+
+    return segments;
+  }
+
+  static diffAngle(a: number, b: number): number {
+    return 90 - Math.abs(Math.abs(Math.abs(a % 180) - Math.abs(b % 180)) - 90);
   }
 
   static pointsToPolygon(points: Point[]): Polygon {

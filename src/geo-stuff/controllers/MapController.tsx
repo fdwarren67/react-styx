@@ -22,6 +22,8 @@ import ViewPointerMoveEvent = __esri.ViewPointerMoveEvent;
 import MapViewGraphicHit = __esri.MapViewGraphicHit;
 import ViewDoubleClickEvent = __esri.ViewDoubleClickEvent;
 import ViewDragEvent = __esri.ViewDragEvent;
+import {Settings} from "../../common-stuff/Settings.tsx";
+import {BlockModel} from "../models/BlockModel.tsx";
 
 export class MapController {
   view: MapView | undefined;
@@ -33,13 +35,15 @@ export class MapController {
 
   currentModel: Model = new EmptyModel();
   currentBuilder: Builder | undefined;
-  compassHandler: CompassHandler;
   currentMode: MapModes = MapModes.None;
   graphicsLayer: GraphicsLayer
 
   clickListeners: (() => Promise<void>)[] = [];
   dragListeners: (() => Promise<void>)[] = [];
   moveListeners: (() => Promise<void>)[] = [];
+
+  private compassHandler: CompassHandler;
+
   static readonly instance: MapController = new MapController();
 
   private constructor() {
@@ -70,6 +74,14 @@ export class MapController {
     }
   }
 
+  builderFinished(): void {
+    if (this.currentMode === MapModes.DrawBlockRect) {
+      console.log(this.currentModel);
+      const block: BlockModel = this.currentModel as BlockModel;
+      block.applyFieldRules(Settings.instance.fieldRules);
+    }
+  }
+
   selectGraphic(graphic: Graphic | undefined): void {
     if (this.selectedGraphic) {
       this.selectedGraphic.symbol = SymbolUtils.normal(this.selectedGraphic.attributes.model.role);
@@ -88,6 +100,10 @@ export class MapController {
 
     this.currentModel = model;
     Promise.all(this.selectionListeners.map(fn => fn(model)));
+  }
+
+  currentModelUpdated(): void {
+    this.compassHandler.updateFromModel(this.currentModel as AzimuthModel);
   }
 
   deleteCurrentModel(): void {
@@ -225,18 +241,6 @@ export class MapController {
       });
     });
   }
-
-  // hitTest2(event: ViewClickEvent | ViewDoubleClickEvent | ViewDragEvent | ViewPointerMoveEvent, callback: (graphic: Graphic) => void): void {
-  //   this.view!.hitTest(event).then((response): void => {
-  //     let matched = false;
-  //     response.results.forEach(res => {
-  //       if (!matched && res.layer && res.layer.id === Constants.graphicsLayerName) {
-  //         matched = true;
-  //         callback((res as MapViewGraphicHit).graphic);
-  //       }
-  //     });
-  //   });
-  // }
 
   flipCurrentAzimuth(): void {
     const az = this.currentModel as AzimuthModel;

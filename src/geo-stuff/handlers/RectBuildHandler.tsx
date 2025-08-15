@@ -3,7 +3,6 @@ import {RectBuilder} from "../builders/RectBuilder.tsx";
 import {MapController} from "../controllers/MapController.tsx";
 import {BuilderTypes} from "../utils/Constants.tsx";
 import {MouseEventModel} from "../models/MouseEventModel.tsx";
-import {AzimuthModel} from "../models/AzimuthModel.tsx";
 
 export class RectBuildHandler {
   static click(ctx: MapController, evx: MouseEventModel): void {
@@ -26,8 +25,9 @@ export class RectBuildHandler {
         ctx.currentBuilder = RectBuilder.fromBasePoints(model, ctx.graphicsLayer.graphics, ctx.getCurrentModelRole());
         ctx.currentModel = ctx.currentBuilder.model;
         ctx.currentBuilder.onFinish(() => {
-          ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
+          ctx.currentModelUpdated();
           ctx.currentBuilder = undefined;
+          ctx.builderFinished();
         });
         ctx.currentBuilder.activate();
       });
@@ -39,7 +39,7 @@ export class RectBuildHandler {
   static move(ctx: MapController, evx: MouseEventModel): boolean {
     if (ctx.currentBuilder) {
       ctx.currentBuilder.move(evx);
-      ctx.compassHandler.updateFromModel(ctx.currentModel as AzimuthModel);
+      ctx.currentModelUpdated();
     }
 
     return ctx.currentMode !== undefined;

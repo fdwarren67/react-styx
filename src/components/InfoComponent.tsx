@@ -4,6 +4,7 @@ import "@esri/calcite-components/dist/calcite/calcite.css";
 import {MapContext} from "../common-stuff/MapContext.tsx";
 import {MapModes} from "../geo-stuff/utils/Constants.tsx";
 import './MapComponent.css'
+import BlockPanel from "../info-stuff/BlockPanel.tsx";
 
 defineCustomElements(window);
 
@@ -11,7 +12,7 @@ export interface InfoHandle {
   setCurrentMode: (mode: MapModes) => void;
 }
 
-const GunBarrelComponent = forwardRef<InfoHandle>((props, ref) => {
+const InfoComponent = forwardRef<InfoHandle>((props, ref) => {
   useImperativeHandle(ref, () => ({
     setCurrentMode: (mode: MapModes) => ctx.setMode(mode)
   }));
@@ -24,10 +25,8 @@ const GunBarrelComponent = forwardRef<InfoHandle>((props, ref) => {
   }, []);
 
   return (
-    <svg style={{height: "100%", width: "100%"}}>
-
-    </svg>
+    <BlockPanel></BlockPanel>
   );
 });
 
-export default GunBarrelComponent;
+export default InfoComponent;

@@ -3,76 +3,19 @@
 import {forwardRef, useEffect, useMemo, useState} from "react";
 import {MapModes} from "../geo-stuff/utils/Constants.tsx";
 import './MapComponent.css'
+import {
+  API_BASE, DataService,
+  emptyFilter,
+  EntitiesResponse,
+  EntityListItem,
+  FilterCollection,
+  FilterExpression, isArrayOp,
+  LogicalOperator,
+  Operator,
+  opsForType,
+  SearchModel
+} from "../common-stuff/DataService.tsx"
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
-
-/** ---------------- Types matching your Python models ---------------- */
-type Operator =
-  | "EQ" | "NE"
-  | "LK" | "SW" | "EW"
-  | "GT" | "GTE" | "LT" | "LTE"
-  | "IN" | "NIN";
-
-type LogicalOperator = "And" | "Or";
-
-type FilterExpression = {
-  propertyName: string;
-  operator: Operator;
-  value: string | string[] | number | boolean | null;
-};
-
-type FilterCollection = {
-  logicalOperator: LogicalOperator;
-  expressions: FilterExpression[];
-  collections: FilterCollection[];
-};
-
-type SearchModel = {
-  entityName: string;
-  columns: string[];
-  filter: FilterCollection;
-  sort: string[];
-  pageSize: number;
-  pageIndex: number;
-};
-
-type EntityListItem = {
-  entity: string;
-  view: string;
-  maxPageSize: number;
-  cached: boolean;
-  loadedAt?: string;
-  columns?: { name: string; type: string }[];
-};
-
-type EntitiesResponse = {
-  entities: EntityListItem[];
-};
-
-/** ---------------- Small helpers ---------------- */
-const emptyFilter = (): FilterCollection => ({
-  logicalOperator: "And",
-  expressions: [],
-  collections: [],
-});
-
-// const ALL_OPS: Operator[] = [
-//   "EQ","NE","LK","SW","EW","GT","GTE","LT","LTE","IN","NIN"
-// ];
-
-function opsForType(t: string): Operator[] {
-  const T = t.toUpperCase();
-  if (["TEXT"].includes(T)) return ["EQ","NE","LK","SW","EW","IN","NIN"];
-  if (["NUMBER","DATE","TIMESTAMP","TIME"].includes(T)) return ["EQ","NE","GT","GTE","LT","LTE","IN","NIN"];
-  if (["BOOLEAN"].includes(T)) return ["EQ","NE"];
-  return ["EQ","NE"]; // OTHER
-}
-
-function isArrayOp(op: Operator) {
-  return op === "IN" || op === "NIN";
-}
-
-/** ---------------- Recursive FilterBuilder ---------------- */
 type FilterBuilderProps = {
   node: FilterCollection;
   onChange: (next: FilterCollection) => void;
@@ -258,7 +201,7 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
   });
 
   // Build/Execute results
-  const [built, setBuilt] = useState<{ sql: string; params: never | any; countSql?: string; countParams?: never } | null>(null);
+  const [built, setBuilt] = useState<{ sql: string; params: never | any; countSql?: string; countParams?: any } | null>(null);
   const [execRows, setExecRows] = useState<never[][]>([]);
   const [execCols, setExecCols] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -268,16 +211,12 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
       try {
         setLoadingEntities(true);
         setError(null);
-        const r = await fetch(`${API_BASE}/admin/entities?include_columns=true&ensure=true`);
-        if (!r.ok) {
-          setError(`Failed to load entities: ${r.status}`);
-        }
-        else {
-          const data: EntitiesResponse = await r.json();
-          setEntities(data.entities);
-          if (data.entities.length && !selected) {
-            setSelected(data.entities[0].entity);
-          }
+
+        const resp = await DataService.entities();
+
+        setEntities(resp.entities);
+        if (resp.entities.length && !selected) {
+          setSelected(resp.entities[0].entity);
         }
       } catch (e: any) {
         setError(e.message || String(e));
@@ -345,13 +284,7 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
   async function buildSQL() {
     setBusy(true); setError(null); setBuilt(null);
     try {
-      const r = await fetch(`${API_BASE}/query/build`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(model),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.detail || JSON.stringify(data));
+      const data = await DataService.sql(model);
       setBuilt({ sql: data.sql, params: data.params, countSql: data.countSql, countParams: data.countParams });
     } catch (e: any) {
       setError(e.message || String(e));
@@ -362,21 +295,12 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
 
   async function runQuery() {
     setBusy(true); setError(null); setExecCols([]); setExecRows([]); setBuilt(null);
+
     try {
-      const r = await fetch(`${API_BASE}/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(model),
-      });
-      const data = await r.json();
-      if (!r.ok) {
-        setError(data.detail || JSON.stringify(data));
-      }
-      else {
-        setExecCols(data.columns || []);
-        setExecRows(data.rows || []);
-        setBuilt({ sql: data.sql, params: data.params });
-      }
+      const data = await DataService.search(model);
+      setExecCols(data.columns || []);
+      setExecRows(data.rows || []);
+      setBuilt({ sql: data.sql, params: data.params });
     } catch (e: any) {
       setError(e.message || String(e));
     } finally {

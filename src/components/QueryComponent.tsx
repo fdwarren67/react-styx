@@ -4,9 +4,8 @@ import {forwardRef, useEffect, useMemo, useState} from "react";
 import {MapModes} from "../geo-stuff/utils/Constants.tsx";
 import './MapComponent.css'
 import {
-  API_BASE, DataService,
+  DataService,
   emptyFilter,
-  EntitiesResponse,
   EntityListItem,
   FilterCollection,
   FilterExpression, isArrayOp,
@@ -207,23 +206,7 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoadingEntities(true);
-        setError(null);
-
-        const resp = await DataService.entities();
-
-        setEntities(resp.entities);
-        if (resp.entities.length && !selected) {
-          setSelected(resp.entities[0].entity);
-        }
-      } catch (e: any) {
-        setError(e.message || String(e));
-      } finally {
-        setLoadingEntities(false);
-      }
-    })();
+    doEntitiesLoad().then(r => {});
   }, [selected]);
 
   // When entity changes, reset model defaults
@@ -244,6 +227,24 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
   }, [selected, selectedMeta?.maxPageSize]);
 
   const colsForEntity = selectedMeta?.columns ?? [];
+
+  async function doEntitiesLoad() {
+    try {
+      setLoadingEntities(true);
+      setError(null);
+
+      const resp = await DataService.entities();
+
+      setEntities(resp.entities);
+      if (resp.entities.length && !selected) {
+        setSelected(resp.entities[0].entity);
+      }
+    } catch (e: any) {
+      setError(e.message || String(e));
+    } finally {
+      setLoadingEntities(false);
+    }
+  }
 
   function updateFilter(fc: FilterCollection) {
     setModel(m => ({ ...m, filter: fc }));
@@ -333,16 +334,7 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
           <button
             type="button"
             className="btn btn-outline-secondary"
-            onClick={async () => {
-              try {
-                const r = await fetch(`${API_BASE}/admin/entities?include_columns=true&ensure=true`);
-                const data: EntitiesResponse = await r.json();
-                setEntities(data.entities);
-                setError(null);
-              } catch (e: any) {
-                setError(e.message || String(e));
-              }
-            }}
+            onClick={doEntitiesLoad}
           >
             Reload Entities
           </button>

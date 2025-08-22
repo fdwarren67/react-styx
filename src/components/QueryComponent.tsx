@@ -14,6 +14,7 @@ import {
   opsForType,
   SearchModel
 } from "../common-stuff/DataService.tsx"
+import {State} from "../common-stuff/BusinessObjects.tsx";
 
 type FilterBuilderProps = {
   node: FilterCollection;
@@ -298,7 +299,10 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
     setBusy(true); setError(null); setExecCols([]); setExecRows([]); setBuilt(null);
 
     try {
+      const tsx = await DataService.tsx(model);
+      console.log(tsx);
       const data = await DataService.search(model);
+
       setExecCols(data.columns || []);
       setExecRows(data.rows || []);
       setBuilt({ sql: data.sql, params: data.params });

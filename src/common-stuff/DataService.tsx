@@ -1,3 +1,5 @@
+import {searchResultToCamelObjects} from "./SearchUtil.tsx";
+
 export const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
 export type Operator =
@@ -142,6 +144,7 @@ export class DataService {
     if (!res.ok) return false;
     const data = await res.json();
     DataService.setIdToken(data.access_token);
+
     return true;
   }
 
@@ -179,6 +182,27 @@ export class DataService {
     return fetch(input, { ...init, headers: headers2, credentials: init.credentials ?? "omit" });
   }
 
+  static async json<T extends object>(model: SearchModel): Promise<T[]> {
+    return searchResultToCamelObjects<T>(await DataService.search(model));
+  }
+
+  static async tsx(model: SearchModel): Promise<string> {
+    const res = await DataService.fetchWithAuth(`${API_BASE}/tsx`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(model),
+      credentials: "omit",
+    });
+
+    if (!res.ok) {
+      let detail = "";
+      try { detail = await res.text(); } catch { /* ignore */ }
+      throw new Error(`${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`);
+    }
+
+    return res.text() as Promise<string>;
+  }
+
   static async search(model: SearchModel): Promise<SearchResponse> {
     const res = await DataService.fetchWithAuth(`${API_BASE}/search`, {
       method: "POST",
@@ -192,31 +216,9 @@ export class DataService {
       try { detail = await res.text(); } catch { /* ignore */ }
       throw new Error(`${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`);
     }
+
     return res.json() as Promise<SearchResponse>;
   }
-
-  // static async search(
-  //   model: SearchModel
-  // ): Promise<SearchResponse> {
-  //   const res = await fetch(import.meta.env.VITE_API_BASE + "/search", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       "Authorization": "Bearer " + DataService.idToken
-  //     },
-  //     body: JSON.stringify(model),
-  //     credentials: "omit",
-  //   });
-  //
-  //   if (!res.ok) {
-  //     let detail = "";
-  //     try { detail = await res.text(); } catch { /* ignore */ }
-  //
-  //     throw new Error(`${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`);
-  //   }
-  //
-  //   return (await res.json()) as SearchResponse;
-  // }
 
   static async sql(model: SearchModel): Promise<SqlResponse> {
     // If app boot calls this before login, try cookie-based refresh once

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {forwardRef, useEffect, useMemo, useState} from "react";
-import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import {MapModes} from "../modules/esri/utils/Constants.tsx";
 import './MapComponent.css'
 import {
   DataService,
@@ -13,8 +13,7 @@ import {
   Operator,
   opsForType,
   SearchModel
-} from "../common-stuff/DataService.tsx"
-import {State} from "../common-stuff/BusinessObjects.tsx";
+} from "../common/data-services/DataService.tsx"
 
 type FilterBuilderProps = {
   node: FilterCollection;
@@ -299,8 +298,8 @@ const QueryComponent = forwardRef<QueryHandle>((props, ref) => {
     setBusy(true); setError(null); setExecCols([]); setExecRows([]); setBuilt(null);
 
     try {
-      const tsx = await DataService.tsx(model);
-      console.log(tsx);
+      console.log(await DataService.tsx(model))
+
       const data = await DataService.search(model);
 
       setExecCols(data.columns || []);

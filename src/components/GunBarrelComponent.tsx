@@ -1,8 +1,8 @@
 import {forwardRef, use, useEffect, useImperativeHandle} from "react";
 import {defineCustomElements,} from "@esri/calcite-components/dist/loader";
 import "@esri/calcite-components/dist/calcite/calcite.css";
-import {MapContext} from "../common-stuff/MapContext.tsx";
-import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import {MapContext} from "../common/MapContext.tsx";
+import {MapModes} from "../modules/esri/utils/Constants.tsx";
 import './MapComponent.css'
 
 defineCustomElements(window);

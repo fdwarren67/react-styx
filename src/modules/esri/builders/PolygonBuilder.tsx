@@ -1,0 +1,165 @@
+import Graphic from '@arcgis/core/Graphic';
+import {Point, Polygon} from '@arcgis/core/geometry';
+import {GeometryUtils} from '../utils/GeometryUtils.tsx';
+import Collection from "@arcgis/core/core/Collection";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import {LineViewModel} from "../view-models/LineViewModel.tsx";
+import {Builder} from "./Builder.tsx";
+import {BuilderTypes, GraphicRoles, ModelRoles} from "../utils/Constants.tsx";
+import {ViewModel} from "../view-models/ViewModel.tsx";
+import {MouseEventModel} from "../view-models/MouseEventModel.tsx";
+import {PolygonViewModel} from "../view-models/PolygonViewModel.tsx";
+import TextSymbol from "@arcgis/core/symbols/TextSymbol";
+import {BlockSymbolUtils} from "../symbols/BlockSymbolUtils.tsx";
+import {MapController} from "../controllers/MapController.tsx";
+import {BlockViewModel} from "../view-models/BlockViewModel.tsx";
+
+export class PolygonBuilder implements Builder {
+  readonly builderType = BuilderTypes.PolygonBuilder;
+  graphics: Collection<Graphic>;
+  model: PolygonViewModel;
+  polygonGraphic: Graphic;
+  fillSymbol: SimpleFillSymbol;
+  labelGraphics: Graphic[] = [];
+  finishCallback: ((model: PolygonViewModel) => void) | undefined;
+
+  constructor(model: PolygonViewModel, graphics: Collection<Graphic>) {
+    this.model = model;
+    this.graphics = graphics;
+    this.fillSymbol = BlockSymbolUtils.building();
+
+    this.polygonGraphic = new Graphic({
+      geometry: new Polygon({
+        rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
+        spatialReference: this.model.vertices[0].spatialReference
+      }),
+      symbol: this.fillSymbol,
+      attributes: {
+        model: this.model,
+        role: model.role,
+        index: 0
+      }
+    });
+
+    for (let i = 0; i < model.vertices.length - 1; i++) {
+      this.pushLabelGraphic(model.vertices[i], model.vertices[i + 1], i);
+    }
+
+    graphics.addMany([...this.labelGraphics, this.polygonGraphic]);
+  }
+
+  static fromBasePoints(model: ViewModel, graphics: Collection<Graphic>, role: ModelRoles): PolygonBuilder {
+    const lineModel = model as LineViewModel;
+
+    const vertices = [
+      lineModel.anchorPoint,
+      lineModel.endPoint,
+      GeometryUtils.offsetPoint(lineModel.endPoint, 5, 0)
+    ];
+
+    if (role === ModelRoles.Block) {
+      return new PolygonBuilder(new BlockViewModel(vertices), graphics);
+    }
+    else {
+      return new PolygonBuilder(new PolygonViewModel(vertices, role), graphics);
+    }
+  }
+
+  move(evx: MouseEventModel): void {
+    this.model.updateVertex(this.model.vertices.length - 1, evx.projectedPoint);
+
+    this.polygonGraphic.geometry = new Polygon({
+      rings: [this.model.vertices.map(pt => [pt.x, pt.y])],
+      spatialReference: this.model.vertices[0].spatialReference
+    });
+
+    const idx = this.labelGraphics.length - 2;
+    this.labelGraphics[idx].geometry = GeometryUtils.centerPoint([this.model.vertices[idx], this.model.vertices[idx + 1]]);
+    this.labelGraphics[idx].symbol = this.calcLabelSymbol(this.model.vertices[idx], this.model.vertices[idx + 1]);
+
+    this.labelGraphics[idx + 1].geometry = GeometryUtils.centerPoint([this.model.vertices[idx + 1], evx.projectedPoint]);
+    this.labelGraphics[idx + 1].symbol = this.calcLabelSymbol(this.model.vertices[idx + 1], evx.projectedPoint);
+  }
+
+  click(evx: MouseEventModel): void {
+    this.move(evx);
+
+    this.model.addVertex(GeometryUtils.offsetPoint(evx.projectedPoint, 5, 0))
+
+    const idx = this.model.vertices.length - 2;
+    this.pushLabelGraphic(this.model.vertices[idx], this.model.vertices[idx + 1], idx);
+    this.graphics.add(this.labelGraphics[this.labelGraphics.length - 1]);
+  }
+
+  dblclick(evx: MouseEventModel) {
+    this.click(evx);
+    this.polygonGraphic.symbol = BlockSymbolUtils.normal();
+
+    const idx = this.labelGraphics.length - 1;
+    this.labelGraphics[idx].geometry = GeometryUtils.centerPoint([this.model.vertices[idx], this.model.vertices[0]]);
+    this.labelGraphics[idx].symbol = this.calcLabelSymbol(this.model.vertices[idx], this.model.vertices[0]);
+
+    if (this.finishCallback) {
+      MapController.instance.selectGraphic(this.polygonGraphic);
+      this.finishCallback(this.model);
+    }
+  }
+
+  activate(): void {
+//    this.polygonGraphic.symbol = FillSymbolUtils.red();
+  }
+
+  deactivate(): void {
+  }
+
+  destroy(): void {
+    this.graphics.removeMany([...this.labelGraphics, this.polygonGraphic]);
+  }
+
+  onFinish(finishCallback: (model: PolygonViewModel) => void): void {
+    this.finishCallback = finishCallback
+  }
+
+  private pushLabelGraphic(pt1: Point, pt2: Point, idx: number): void {
+    this.labelGraphics.push(new Graphic({
+      geometry: GeometryUtils.centerPoint([pt1, pt2]),
+      symbol: this.calcLabelSymbol(pt1, pt2),
+      attributes: {
+        model: this.model,
+        role: GraphicRoles.LineLabel,
+        index: idx
+      }
+    }));
+  }
+
+  private calcLabelSymbol(pt1: Point, pt2: Point): TextSymbol {
+    const length = Math.round(GeometryUtils.distance([pt1.x, pt1.y], [pt2.x, pt2.y])).toLocaleString();
+    const azimuth = Math.round(GeometryUtils.azimuth(pt1, pt2) * 100) / 100;
+
+    const multi = azimuth / Math.abs(azimuth);
+    const radians = -GeometryUtils.radians(pt1, pt2);
+    const offsetY = (multi * Math.cos(radians) * 10) + 'px';
+    const offsetX = (multi * Math.sin(radians) * 10) + 'px';
+    let angle = -GeometryUtils.degrees(pt2, pt1)
+    if (azimuth > 0) {
+      angle += 180;
+    }
+
+    return new TextSymbol({
+      text: `${length} ft        ${azimuth}\u00B0`,
+      angle: angle,
+      xoffset: offsetX,
+      yoffset: offsetY,
+      color: "#ff000066",
+      haloColor: "white",
+      haloSize: "1px",
+      font: {
+        size: 12,
+        family: "sans-serif",
+        weight: "bold"
+      },
+      horizontalAlignment: "center",
+      verticalAlignment: "middle"
+    });
+  }
+}

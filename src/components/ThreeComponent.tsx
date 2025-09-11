@@ -2,13 +2,13 @@ import {forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState
 import * as THREE from 'three';
 import {Mesh} from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {MapContext} from "../common-stuff/MapContext.tsx";
-import {GeometryUtils} from "../geo-stuff/utils/GeometryUtils.tsx";
+import {MapContext} from "../common/MapContext.tsx";
+import {GeometryUtils} from "../modules/esri/utils/GeometryUtils.tsx";
 import {Polygon, Polyline} from "@arcgis/core/geometry";
-import {ModelRoles} from "../geo-stuff/utils/Constants.tsx";
-import {MeshUtils} from "../three-stuff/MeshUtils.tsx";
+import {ModelRoles} from "../modules/esri/utils/Constants.tsx";
+import {MeshUtils} from "../modules/three/MeshUtils.tsx";
 import Graphic from "@arcgis/core/Graphic";
-import {GraphicsUtils} from "../geo-stuff/utils/GraphicsUtils.tsx";
+import {GraphicsUtils} from "../modules/esri/utils/GraphicsUtils.tsx";
 
 export interface ThreeHandle {
   resize: () => void;

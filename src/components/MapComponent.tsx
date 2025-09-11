@@ -8,9 +8,9 @@ import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import {defineCustomElements,} from "@esri/calcite-components/dist/loader";
 import "@esri/calcite-components/dist/calcite/calcite.css";
-import {MapContext} from "../common-stuff/MapContext.tsx";
-import {GeoTest} from "../geo-stuff/controllers/GeoTest.tsx";
-import {MapModes} from "../geo-stuff/utils/Constants.tsx";
+import {MapContext} from "../common/MapContext.tsx";
+import {GeoTest} from "../modules/esri/controllers/GeoTest.tsx";
+import {MapModes} from "../modules/esri/utils/Constants.tsx";
 import './MapComponent.css'
 import ViewClickEvent = __esri.ViewClickEvent;
 import ViewPointerMoveEvent = __esri.ViewPointerMoveEvent;
@@ -82,6 +82,7 @@ const MapComponent = forwardRef<MapHandle>((props, ref) => {
 
     map.add(layer);
     map.add(ctx.graphicsLayer);
+    map.add(ctx.secondLayer);
 
     ctx.view.on('click', async (event: ViewClickEvent) => {
       ctx.click(event);

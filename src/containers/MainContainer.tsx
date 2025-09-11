@@ -3,28 +3,31 @@ import ThreeComponent, {ThreeHandle} from "../components/ThreeComponent.tsx";
 import PanelContainer, {PanelHandle} from "./PanelContainer.tsx";
 import MapComponent, {MapHandle} from "../components/MapComponent.tsx";
 import {useEffect, useRef, useState} from "react";
-import {MapModes, ModelRoles} from "../geo-stuff/utils/Constants.tsx";
-import InfoComponent, {InfoHandle} from "../components/InfoComponent.tsx";
-import {MapController} from "../geo-stuff/controllers/MapController.tsx";
-import {Model} from "../geo-stuff/models/Model.tsx";
+import {MapModes, ModelRoles} from "../modules/esri/utils/Constants.tsx";
+import ChatComponent, {ChatHandle} from "../components/ChatComponent.tsx";
+import {MapController} from "../modules/esri/controllers/MapController.tsx";
+import {ViewModel} from "../modules/esri/view-models/ViewModel.tsx";
 import QueryComponent from "../components/QueryComponent.tsx";
+import ConsoleComponent, {ConsoleHandle} from "../components/ConsoleComponent.tsx";
 
 const MainContainer = () => {
   const mapRef = useRef<MapHandle>(null);
   const threeRef = useRef<ThreeHandle>(null);
-  const infoRef = useRef<InfoHandle>(null);
+  const chatRef = useRef<ChatHandle>(null);
+  const consoleRef = useRef<ConsoleHandle>(null);
 
   const mapPanelRef = useRef<PanelHandle>(null);
   const threePanelRef = useRef<PanelHandle>(null);
-  const infoPanelRef = useRef<PanelHandle>(null);
-  const panelOrder = useRef<string[]>(['map', 'three', 'info']);
+  const chatPanelRef = useRef<PanelHandle>(null);
+  const consolePanelRef = useRef<PanelHandle>(null);
+  const panelOrder = useRef<string[]>(['map', 'three', 'chat', 'console']);
 
   const [isBlockSelected, setIsBlockSelected] = useState<boolean>(false);
   const [isStickSelected, setIsStickSelected] = useState<boolean>(false);
   const [isMapObjectSelected, setIsMapObjectSelected] = useState<boolean>(false);
   const [zIndexQuery, setZIndexQuery] = useState(-2000);
 
-  MapController.instance.selectionListeners.push(async (model: Model) => {
+  MapController.instance.selectionListeners.push(async (model: ViewModel) => {
     setIsBlockSelected(model && model.role === ModelRoles.Block);
     setIsStickSelected(model && model.role === ModelRoles.Stick);
     setIsMapObjectSelected(model && (model.role === ModelRoles.Block || model.role === ModelRoles.Stick));
@@ -37,9 +40,13 @@ const MainContainer = () => {
     if (origin != "three") {
       threePanelRef.current?.setBackPanelCode(backPanelCode);
     }
-    if (origin != "info") {
-      infoPanelRef.current?.setBackPanelCode(backPanelCode);
+    if (origin != "chat") {
+      chatPanelRef.current?.setBackPanelCode(backPanelCode);
     }
+    if (origin != "console") {
+      consolePanelRef.current?.setBackPanelCode(backPanelCode);
+    }
+
     threeRef.current!.resize();
   };
 
@@ -49,7 +56,8 @@ const MainContainer = () => {
 
     mapPanelRef.current?.setZOrder(panelOrder.current);
     threePanelRef.current?.setZOrder(panelOrder.current);
-    infoPanelRef.current?.setZOrder(panelOrder.current);
+    chatPanelRef.current?.setZOrder(panelOrder.current);
+    consolePanelRef.current?.setZOrder(panelOrder.current);
   }
 
   const setMapMode = (mode: MapModes) => {
@@ -93,19 +101,22 @@ const MainContainer = () => {
                   )}
                   <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("map", "main")}>Expand Map</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("three", "main")}>Expand 3-D</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("info", "main")}>Expand Info</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("chat", "main")}>Expand Chat</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => setBackPanelCode("console", "main")}>Expand Console</a></li>
                   <li>
                     <hr className="dropdown-divider"/>
                   </li>
                   <li><a className="dropdown-item" href="#" onClick={() => bringToFront("map")}>Bring Map to Front</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => bringToFront("three")}>Bring 3-D to Front</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => bringToFront("info")}>Bring Info to Front</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => bringToFront("chat")}>Bring Chat to Front</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => bringToFront("console")}>Bring Console to Front</a></li>
                   <li>
                     <hr className="dropdown-divider"/>
                   </li>
                   <li><a className="dropdown-item" href="#" onClick={() => mapPanelRef.current!.hide()}>Hide Map</a></li>
                   <li><a className="dropdown-item" href="#" onClick={() => threePanelRef.current!.hide()}>Hide 3-D</a></li>
-                  <li><a className="dropdown-item" href="#" onClick={() => infoPanelRef.current!.hide()}>Hide Info</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => chatPanelRef.current!.hide()}>Hide Chat</a></li>
+                  <li><a className="dropdown-item" href="#" onClick={() => consolePanelRef.current!.hide()}>Hide Console</a></li>
                 </ul>
               </li>
 
@@ -175,13 +186,21 @@ const MainContainer = () => {
                       onResize={(size) => threeRef.current!.resize()}
       ><ThreeComponent ref={threeRef}></ThreeComponent></PanelContainer>
 
-      <PanelContainer ref={infoPanelRef} panelCode="info" title={"Info"}
+      <PanelContainer ref={chatPanelRef} panelCode="chat" title={"Chat"}
                       defaults={{position: {x: (parent.innerWidth * .67) - 10, y: (parent.innerHeight * .67) - 10}, size: {width: "33vw", height: "33vh"}}}
-                      onSetToBackPanel={() => setBackPanelCode('info', 'info')}
-                      onBringToFront={() => bringToFront('info')}
+                      onSetToBackPanel={() => setBackPanelCode('chat', 'chat')}
+                      onBringToFront={() => bringToFront('chat')}
                       onResize={(size) => {
                       }}
-      ><InfoComponent ref={infoRef}></InfoComponent></PanelContainer>
+      ><ChatComponent ref={chatRef}></ChatComponent></PanelContainer>
+
+      <PanelContainer ref={chatPanelRef} panelCode="chat" title={"Console"}
+                      defaults={{position: {x: (parent.innerWidth * .67) - 10, y: 50}, size: {width: "33vw", height: "33vh"}}}
+                      onSetToBackPanel={() => setBackPanelCode('console', 'console')}
+                      onBringToFront={() => bringToFront('console')}
+                      onResize={(size) => {
+                      }}
+      ><ConsoleComponent ref={consoleRef}></ConsoleComponent></PanelContainer>
     </div>
   );
 };

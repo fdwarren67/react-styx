@@ -1,8 +1,8 @@
 // src/components/LoginScreen.tsx
 import { useState } from "react";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
-import { useAuth } from "./auth/AuthContext";
-import { DataService } from "./common-stuff/DataService";
+import { useAuth } from "./common/data-services/AuthContext.tsx";
+import { DataService } from "./common/data-services/DataService.tsx";
 
 export default function LoginScreen() {
   const { setIdToken } = useAuth(); // store OUR access token (not Google’s)

@@ -90,7 +90,7 @@ const PanelContainer = forwardRef<PanelHandle, PanelProps>(({ children, panelCod
            onResize(size);
          }}>
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
-        <div className="custom-drag-handle bg-primary text-white p-2 d-flex align-items-center" style={{cursor: "move", height: "40px", overflow: "hidden"}}>
+        <div className="custom-drag-handle bg-primary text-white p-2 d-flex align-items-center" style={{cursor: "move", height: "40px", overflow: "hidden", flexShrink: "0"}}>
           {title}
           <div className={"ms-auto d-flex align-items-center"} style={{padding: "0px 0px"}}>
             <i className={"bi bi-x fs-2 me-1"} style={{cursor: "pointer", fontSize: "2rem", lineHeight: 1}}
@@ -101,7 +101,7 @@ const PanelContainer = forwardRef<PanelHandle, PanelProps>(({ children, panelCod
                onClick={() => setToBackPanel()}></i>
           </div>
         </div>
-        <div className="flex-grow-1">
+        <div className="flex-grow-1" style={{overflow: "hidden", display: "flex", flexDirection: "column"}}>
           {children}
         </div>
       </div>

@@ -1,13 +1,13 @@
 import './App.css'
 import {useEffect} from "react";
-import {MapContext} from "./common-stuff/MapContext.tsx";
-import {MapController} from "./geo-stuff/controllers/MapController.tsx";
+import {MapContext} from "./common/MapContext.tsx";
+import {MapController} from "./modules/esri/controllers/MapController.tsx";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import MainContainer from "./containers/MainContainer.tsx";
-import {DataService} from "./common-stuff/DataService.tsx";
-import {AuthProvider, useAuth} from "./auth/AuthContext.tsx";
+import {DataService} from "./common/data-services/DataService.tsx";
+import {AuthProvider, useAuth} from "./common/data-services/AuthContext.tsx";
 import LoginScreen from "./LoginScreen.tsx";
 
 function Shell() {
